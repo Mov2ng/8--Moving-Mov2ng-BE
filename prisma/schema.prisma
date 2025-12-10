@@ -5,10 +5,243 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// 유저
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  phone_number String
+  name         String
+  role         Role     @default(USER)
+  provider     provider @default(LOCAL)
+  isDelete     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  service        Service[]
+  region         Region[]
+  notice         Notice[]
+  driver         Driver[]
+  likes          Like[]
+  reviews        Review[]
+  favoriteDriver FavoriteDriver[]
+  requests       Request[]
+}
+
+enum Role {
+  USER
+  DRIVER
+}
+
+enum provider {
+  LOCAL
+  KAKAO
+  GOOGLE
+  NAVER
+}
+
+// 서비스
+model Service {
+  id        Int      @id @default(autoincrement())
+  user_id   String
+  category  Category
+  isDelete  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum Category {
+  SMALL
+  HOME
+  OFFICE
+}
+
+// 지역
+model Region {
+  id        Int        @id @default(autoincrement())
+  user_id   String
+  region    RegionType
+  isDelete  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum RegionType {
+  SEOUL
+  GYEONGGI
+  INCHEON
+  GANGWON
+  CHUNGBUK
+  CHUNGNAM
+  SEJONG
+  DAEJEON
+  JEONBUK
+  JEONNAM
+  GWANGJU
+  GYEONGBUK
+  GYEONGNAM
+  DAEGU
+  ULSAN
+  BUSAN
+  JEJU
+}
+
+// 알림
+model Notice {
+  id             Int        @id @default(autoincrement())
+  user_id        String
+  notice_type    NoticeType
+  notice_title   String
+  notice_content String
+  isDelete       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum NoticeType {
+  NEW_ORDER
+  ORDER_ACCSESS
+  MOVE_TIME
+}
+
+// 기사
+model Driver {
+  id             Int      @id @default(autoincrement())
+  user_id        String
+  nickname       String
+  driver_years   Int?
+  driver_intro   String?
+  driver_content String?
+  isDelete       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User             @relation(fields: [user_id], references: [id])
+  likes          Like[]
+  review         Review[]
+  favoriteDriver FavoriteDriver[]
+  estimates      estimate[]
+}
+
+//좋아요
+model Like {
+  id        Int      @id @default(autoincrement())
+  driver_id Int
+  user_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [user_id], references: [id])
+  driver Driver @relation(fields: [driver_id], references: [id])
+}
+
+// 리뷰
+model Review {
+  id             Int      @id @default(autoincrement())
+  driver_id      Int
+  user_id        String
+  review_title   String?
+  review_content String?
+  rating         Int
+  isDelete       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user   User   @relation(fields: [user_id], references: [id])
+  driver Driver @relation(fields: [driver_id], references: [id])
+}
+
+//찜한 기사
+model FavoriteDriver {
+  id        Int      @id @default(autoincrement())
+  driver_id Int
+  user_id   String
+  isDelete  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [user_id], references: [id])
+  driver Driver @relation(fields: [driver_id], references: [id])
+}
+
+// 견적 요청 아이디
+model Request {
+  id          Int      @id @default(autoincrement())
+  user_id     String
+  moving_type Category
+  moving_data DateTime
+  origin      String
+  destination String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [user_id], references: [id])
+  estimates estimate[]
+}
+
+// 견적 테이블
+model estimate {
+  id            Int            @id @default(autoincrement())
+  request_id    Int
+  driver_id     Int
+  status        EstimateStatus
+  request_reson String?
+  isRequest     Boolean        @default(false)
+  price         Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  driver  Driver  @relation(fields: [driver_id], references: [id])
+  request Request @relation(fields: [request_id], references: [id])
+}
+
+enum EstimateStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// 히스토리
+model History {
+  id         Int       @id @default(autoincrement())
+  table_name tableName
+  task_type  TaskType
+  data       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum tableName {
+  USER
+  SERVICE
+  REGION
+  NOTICE
+  DRIVER
+  LIKE
+  REVIEW
+  FavoriteDriver
+  Request
+  estimate
+}
+
+enum TaskType {
+  CREATE
+  UPDATE
+  DELETE
 }

@@ -3,7 +3,7 @@
     "target": "ES2021",              // 최신 JS 기능 fully 지원
     "module": "CommonJS",            // Node.js Express 전통 방식을 가장 안정적으로 사용
     "moduleResolution": "node",
-    "rootDir": "./src",              // TS 코드 위치
+    "rootDir": "./",                 // TS 코드 위치 ./src -> ./ 로 변경
     "outDir": "./dist",              // 컴파일 출력 폴더
     "strict": true,                  // 엄격한 타입 검사
     "esModuleInterop": true,         // CommonJS 모듈 호환성
@@ -11,6 +11,6 @@
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true                // 디버깅용 소스맵
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "prisma/"],           // src 폴더 + prisma 폴더
   "exclude": ["node_modules"]
 }

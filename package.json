@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
-    "start": "node --enable-source-maps dist/app.js"
+    "start": "node --enable-source-maps dist/app.js",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:reset": "ts-node prisma/reset.ts"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,7 @@
   "homepage": "https://github.com/Mov2ng/8--Moving-Mov2ng-BE#readme",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^7.0.1",
+    "@prisma/client": "^7.1.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -38,7 +40,7 @@
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.2",
     "@types/node-cron": "^3.0.11",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
