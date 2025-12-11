@@ -27,15 +27,17 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1),
 });
 
-// zod 스키마로 파싱 및 검증
-const parsedEnv = envSchema.safeParse(process.env);
+// Zod에서 타입 추론
+type Env = z.infer<typeof envSchema>;
 
-// 검증 실패시 에러 출력 및 프로세스 중단
-if (!parsedEnv.success) {
-  console.error("❌ Invalid environment variables: ", parsedEnv.error.message);
-
-  throw new Error("Invalid environment variables.");
+let env: Env;
+try {
+  // zod 스키마로 파싱 및 검증
+  env = envSchema.parse(process.env); // parse는 항상 T 반환
+} catch (error) {
+  // 검증 실패시 에러 출력 및 프로세스 중단
+  console.error("❌ Invalid environment variables:", error);
+  throw error;
 }
 
-// 검증된 환경 변수를 export
-export default parsedEnv.data;
+export default env;
