@@ -1,7 +1,7 @@
 import express from "express";
-import { setupSwagger } from "./swagger";
+import { setupSwagger } from "./docs/swagger";
 import dotenv from "dotenv";
-import "./bot";
+import "./services/discordBot";
 
 dotenv.config(); // .env 변수를 process.env 객체에 추가
 
