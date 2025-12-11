@@ -22,6 +22,7 @@
   "homepage": "https://github.com/Mov2ng/8--Moving-Mov2ng-BE#readme",
   "description": "",
   "dependencies": {
+
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.0.1",
     "argon2": "^0.44.0",
