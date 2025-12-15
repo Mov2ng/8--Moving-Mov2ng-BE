@@ -6,8 +6,12 @@
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
     "start": "node --enable-source-maps dist/app.js",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:reset": "ts-node prisma/reset.ts"
+    "prisma:reset": "ts-node prisma/reset.ts",
+    "db:push": "prisma db push"
   },
   "repository": {
     "type": "git",
@@ -22,7 +26,6 @@
   "homepage": "https://github.com/Mov2ng/8--Moving-Mov2ng-BE#readme",
   "description": "",
   "dependencies": {
-
     "@prisma/adapter-pg": "^7.1.0",
     "@prisma/client": "^7.0.1",
     "argon2": "^0.44.0",
@@ -41,6 +44,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@prisma/config": "^7.0.1",
     "@types/argon2": "^0.14.1",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.5",
