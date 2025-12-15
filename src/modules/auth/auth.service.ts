@@ -9,7 +9,6 @@ import {
 } from "../../utils/jwt";
 import authRepository from "./auth.repository";
 
-
 async function signup(
   name: string,
   email: string,
@@ -82,15 +81,15 @@ async function login(email: string, password: string) {
 }
 
 async function logout(refreshToken: string) {
-  const decoded: JwtPayload = verifyToken(refreshToken);
-  if (!decoded) {
-    throw new ApiError(
-      HTTP_STATUS.UNAUTHORIZED,
-      "리프레시 토큰이 유효하지 않습니다.",
-      HTTP_CODE.UNAUTHORIZED
-    );
-  }
-  await authRepository.updateUser(decoded.id, { refreshToken: null });
+  // const decoded: JwtPayload = verifyToken(refreshToken);
+  // if (!decoded) {
+  //   throw new ApiError(
+  //     HTTP_STATUS.UNAUTHORIZED,
+  //     "리프레시 토큰이 유효하지 않습니다.",
+  //     HTTP_CODE.UNAUTHORIZED
+  //   );
+  // }
+  // await authRepository.updateUser(decoded.id, { refreshToken: null });
 }
 
 export default {
