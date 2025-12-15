@@ -16,12 +16,25 @@ const DEFAULT_SIGN_OPTIONS: SignOptions = {
 };
 
 /**
- * JWT 토큰 생성
+ * JWT Access 토큰 생성
  * @param payload - 토큰에 담을 데이터 객체
  * @param options - jwt.sign에 전달할 옵션, 기본 옵션과 병합
  * @returns 생성된 JWT 문자열
  */
 export function generateToken(payload: object, options: SignOptions = {}) {
+  return jwt.sign(payload, SECRET_KEY, {
+    ...DEFAULT_SIGN_OPTIONS,
+    ...options,
+  });
+}
+
+/**
+ * JWT Refresh 토큰 생성
+ * @param payload - 토큰에 담을 데이터 객체
+ * @param options - jwt.sign에 전달할 옵션, 기본 옵션과 병합
+ * @returns 생성된 JWT 문자열
+ */
+export function generateRefreshToken(payload: object, options: SignOptions = {}) {
   return jwt.sign(payload, SECRET_KEY, {
     ...DEFAULT_SIGN_OPTIONS,
     ...options,
@@ -39,7 +52,11 @@ export function verifyToken(token: string) {
     return jwt.verify(token, SECRET_KEY);
   } catch (error) {
     if (error instanceof Error) {
-      throw new ApiError(HTTP_STATUS.AUTH_INVALID_TOKEN, error.message, HTTP_CODE.AUTH_INVALID_TOKEN);
+      throw new ApiError(
+        HTTP_STATUS.AUTH_INVALID_TOKEN,
+        error.message,
+        HTTP_CODE.AUTH_INVALID_TOKEN
+      );
     }
   }
 }
