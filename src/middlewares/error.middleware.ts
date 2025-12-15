@@ -15,7 +15,7 @@ function errorMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
-): void {
+): Response {
   // ANCHOR: middleware 함수기 때문에 예외적으로 err라고 선언하나, 필요시 error로 변경
 
   // 기본 응답 객체 (예기치 않은 에러)
@@ -44,19 +44,15 @@ function errorMiddleware(
   logger.error({
     message: response.message,
     statusCode:
-      err instanceof ApiError
-        ? err.statusCode
-        : HTTP_STATUS.INTERNAL_ERROR,
+      err instanceof ApiError ? err.statusCode : HTTP_STATUS.INTERNAL_ERROR,
     stack: err instanceof ApiError ? err.stack : undefined,
     path: req.path,
     method: req.method,
   });
 
-  res
+  return res
     .status(
-      err instanceof ApiError
-        ? err.statusCode
-        : HTTP_STATUS.INTERNAL_ERROR
+      err instanceof ApiError ? err.statusCode : HTTP_STATUS.INTERNAL_ERROR
     )
     .json(response);
 }
