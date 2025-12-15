@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * 로그인, 회원가입 요청 데이터 검증을 위한 Zod 스키마 정의
+ * 회원가입, 로그인, 토큰 재발급 요청 데이터 검증을 위한 Zod 스키마 정의
  */
 
 export const signupSchema = z.object({
@@ -34,5 +34,11 @@ export const loginSchema = z.object({
   body: z.object({
     email: z.email("유효한 이메일을 입력해 주세요"),
     password: z.string().min(1, "비밀번호를 입력해 주세요"),
+  }),
+});
+
+export const refreshSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().min(1, "리프레시 토큰이 필요합니다"), // 빈 문자열 방지
   }),
 });
