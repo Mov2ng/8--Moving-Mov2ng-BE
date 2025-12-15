@@ -11,7 +11,7 @@ interface AuthRequest extends Request {
   user?: { id: string };
 }
 
-// JWT Payload 타입 정의 // Q.안쓰이는데 왜만듦? (타입단언 안하고싶어서 그럼)
+// JWT Payload 타입 정의 (예상치 못한 에러 방지를 위해)
 interface JwtUserPayload extends JwtPayload {
   id?: number;
 }
@@ -22,7 +22,7 @@ interface JwtUserPayload extends JwtPayload {
  * @param res Express 응답 객체
  * @param next 다음 미들웨어 호출
  */
-async function authMiddleware(
+export async function authMiddleware(
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -68,7 +68,7 @@ async function authMiddleware(
           HTTP_MESSAGE.USER_NOT_FOUND,
           HTTP_CODE.USER_NOT_FOUND
         )
-      ); // ANCHOR new ApiError 만든건 좋은데.. 인자값이 너무 다 매직넘버 아님?ㅠ 이거 상수화해야대
+      ); 
     }
 
     // req.user에 안전히 ID 할당
