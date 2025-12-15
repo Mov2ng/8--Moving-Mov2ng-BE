@@ -10,7 +10,10 @@ const swaggerSpec = swaggerJSDoc({
       version: "1.0.0",
     },
   },
-  apis: ["./src/routes/*.ts"], // JSDoc을 읽어올 라우터 파일 경로
+  apis: [
+    "./src/routes/*.ts",
+    "./src/modules/**/*.ts",
+  ],
 });
 
 export const setupSwagger = (app: Express) => {

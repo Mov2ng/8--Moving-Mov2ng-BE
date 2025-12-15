@@ -15,7 +15,7 @@ export type AsyncHandler<
   req: Request<P, ResBody, ReqBody, ReqQuery>,
   res: Response<ResBody>,
   next: NextFunction
-) => Promise<void>;
+) => Promise<unknown>;
 
 /**
  * 비동기 핸들러 래퍼 함수
@@ -43,6 +43,8 @@ function asyncWrapper<
     }
   };
 }
+
+export default asyncWrapper;
 
 // 사용 예시 (auth.controller.ts)
 // import asyncWrapper from '../utils/asyncWrapper';
