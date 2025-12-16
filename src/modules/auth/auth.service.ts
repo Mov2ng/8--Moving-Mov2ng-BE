@@ -16,7 +16,7 @@ async function signup(
   email: string,
   phoneNum: string,
   password: string,
-  role?: string
+  role: string
 ) {
   if (role !== "USER" && role !== "DRIVER") {
     throw new ApiError(
@@ -25,8 +25,6 @@ async function signup(
       HTTP_CODE.BAD_REQUEST
     );
   }
-
-  console.log("role 검증 완");
 
   // role을 Role enum 타입으로 변환 (타입 단언 없이)
   const roleEnum: Role = role === "USER" ? Role.USER : Role.DRIVER;
@@ -44,8 +42,6 @@ async function signup(
     );
   }
 
-  console.log("유저 중복 체크 완");
-
   // 비밀번호 해싱
   const hashedPassword = await hashPassword(password);
   if (!hashedPassword) {
@@ -56,8 +52,6 @@ async function signup(
     );
   }
 
-  console.log("비밀번호 해싱 완");
-
   // DB에 사용자 정보 저장
   const user = await authRepository.createUser(
     name,
@@ -66,8 +60,6 @@ async function signup(
     hashedPassword,
     roleEnum
   );
-
-  console.log("유저 생성 완");
 
   if (!user) {
     throw new ApiError(

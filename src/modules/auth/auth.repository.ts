@@ -15,7 +15,6 @@ async function createUser(
   hashedPassword: string,
   role: Role
 ) {
-  console.log(name, email, phoneNum, hashedPassword, role);
   return prisma.user.create({
     data: {
       name,
