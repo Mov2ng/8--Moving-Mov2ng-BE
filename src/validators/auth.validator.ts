@@ -12,6 +12,8 @@ export const signupSchema = z.object({
       phoneNum: z
         .string()
         .regex(/^[0-9]+$/, "숫자만 입력해 주세요")
+        .min(10, "전화번호는 최소 10자 이상이어야 합니다")
+        .max(11, "전화번호는 최대 11자 이하이어야 합니다")
         .transform((val) => (typeof val === "string" ? val : String(val))), // 숫자면 문자열로 변환
       password: z
         .string()
