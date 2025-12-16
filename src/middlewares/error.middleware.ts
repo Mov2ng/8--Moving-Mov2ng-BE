@@ -3,6 +3,7 @@ import ApiError, { ApiErrorResponse } from "../core/http/ApiError";
 import logger from "../utils/logger";
 import env from "../config/env";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
+import { messageLink } from "discord.js";
 
 /**
  * 에러 처리 및 응답 반환 공통 미들웨어
@@ -17,6 +18,8 @@ function errorMiddleware(
   next: NextFunction
 ): Response {
   // ANCHOR: middleware 함수기 때문에 예외적으로 err라고 선언하나, 필요시 error로 변경
+
+  console.log(err);
 
   // 기본 응답 객체 (예기치 않은 에러)
   let response: ApiErrorResponse = {
@@ -38,17 +41,16 @@ function errorMiddleware(
     if (env.NODE_ENV === "development") {
       response.stack = err.stack;
     }
-  }
 
-  // 에러 로깅
-  logger.error({
-    message: response.message,
-    statusCode:
-      err instanceof ApiError ? err.statusCode : HTTP_STATUS.INTERNAL_ERROR,
-    stack: err instanceof ApiError ? err.stack : undefined,
-    path: req.path,
-    method: req.method,
-  });
+    // 에러 로깅: 스택이 있으면 메세지 대신 스택을 메인 출력으로 사용
+    logger.error(err.stack || response.message, {
+      message: response.message,
+      statusCode: err.statusCode,
+      path: req.path,
+      method: req.method,
+      stack: response.stack,
+    });
+  }
 
   return res
     .status(

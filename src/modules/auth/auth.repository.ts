@@ -1,25 +1,27 @@
 import prisma from "../../config/db";
-import { hashPassword } from "../../core/security/password";
+import { Role } from "../../generated/prisma";
 
 /**
  * 사용자 정보 생성
  * @param name 사용자 이름
  * @param email 사용자 이메일
  * @param phoneNum 사용자 전화번호
- * @param password 사용자 비밀번호
+ * @param hashedPassword 이미 해싱된 비밀번호
  */
 async function createUser(
   name: string,
   email: string,
   phoneNum: string,
-  password: string
+  hashedPassword: string,
+  role: Role
 ) {
   return prisma.user.create({
     data: {
       name,
       email,
       phone_number: phoneNum,
-      password: await hashPassword(password),
+      password: hashedPassword,
+      role,
     },
   });
 }
@@ -27,12 +29,14 @@ async function createUser(
 /**
  * 사용자 이메일로 사용자 정보 조회
  * @param email 사용자 이메일
+ * @param role 사용자 역할
  * @returns 사용자 정보
  */
-function findUserByEmail(email: string) {
-  return prisma.user.findUnique({
+function findUserByEmailAndRole(email: string, role: Role) {
+  return prisma.user.findFirst({
     where: {
       email,
+      role,
     },
   });
 }
@@ -67,6 +71,6 @@ function updateUser(
 
 export default {
   createUser,
-  findUserByEmail,
+  findUserByEmailAndRole,
   updateUser,
 };
