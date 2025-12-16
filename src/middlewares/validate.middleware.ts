@@ -24,7 +24,7 @@ function validate<T>(schema: z.ZodType<T>) {
           // 오류 발생 필드
           field: issue.path.length > 0 ? issue.path.join(".") : "root",
           // 오류 메세지 (zod 생성)
-          detail: issue.message,
+          reason: issue.message,
         })
       );
       return next(

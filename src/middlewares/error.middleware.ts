@@ -34,7 +34,7 @@ function errorMiddleware(
       success: false,
       message: err.message,
       code: err.code,
-      errors: err.errors,
+      details: err.details,
     };
 
     // 개발 환경일 때만 스택 노출 (보안)
