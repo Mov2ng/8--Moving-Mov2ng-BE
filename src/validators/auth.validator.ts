@@ -25,6 +25,11 @@ export const signupSchema = z.object({
           message: "비밀번호에 특수문자가 포함되어야 합니다.",
         }), // 특수문자 1자 이상
       passwordConfirm: z.string(),
+      role: z
+        .enum(["USER", "DRIVER"], {
+          message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+        })
+        .default("USER"),
     })
     .refine((data) => data.password === data.passwordConfirm, {
       path: ["passwordConfirm"],
@@ -34,6 +39,11 @@ export const signupSchema = z.object({
 
 export const loginSchema = z.object({
   body: z.object({
+    role: z
+      .enum(["USER", "DRIVER"], {
+        message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+      })
+      .default("USER"),
     email: z.email("유효한 이메일을 입력해 주세요"),
     password: z.string().min(1, "비밀번호를 입력해 주세요"),
   }),

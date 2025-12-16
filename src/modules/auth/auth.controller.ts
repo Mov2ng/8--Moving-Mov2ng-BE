@@ -8,8 +8,9 @@ import { LoginDto, SignupDto } from "./auth.dto";
 
 const signup = asyncWrapper(
   async (req: Request<{}, {}, SignupDto>, res: Response) => {
-    const { name, email, phoneNum, password } = req.body;
-    const user = await authService.signup(name, email, phoneNum, password);
+    const { role, name, email, phoneNum, password } = req.body;
+    console.log('controller 시작');
+    const user = await authService.signup(name, email, phoneNum, password, role);
     logger.info(`[${new Date().toISOString()}] 회원가입 성공: ${user.email}`);
     return ApiResponse.success(res, user, "회원가입 성공", HTTP_STATUS.CREATED);
   }
@@ -17,8 +18,8 @@ const signup = asyncWrapper(
 
 const login = asyncWrapper(
   async (req: Request<{}, {}, LoginDto>, res: Response) => {
-    const { email, password } = req.body;
-    const user = await authService.login(email, password);
+    const { role, email, password } = req.body;
+    const user = await authService.login(email, password, res, req, role);
     logger.info(`[${new Date().toISOString()}] 로그인 성공: ${user.email}`);
     return ApiResponse.success(res, user, "로그인 성공", HTTP_STATUS.OK);
   }
