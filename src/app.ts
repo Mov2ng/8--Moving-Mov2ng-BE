@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { setupSwagger } from "./docs/swagger";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
@@ -10,8 +11,8 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
-// 모든 도메인 허용
-// app.use(cors()); // 엥 이것두..?
+// CORS 설정 (개발용 전체 오리진 허용 + 쿠키 전달)
+app.use(cors({ origin: true, credentials: true })); 
 
 // 라우트
 app.use("/auth", authRouter);
