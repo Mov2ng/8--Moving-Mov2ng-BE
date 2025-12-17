@@ -8,14 +8,14 @@
 
 export interface ApiErrorDetail {
   field: string;
-  detail: string; // 상세 필드별 에러 메세지 (ex. 이메일은 필수입니다)
+  reason: string; // 상세 필드별 에러 메세지 (ex. 이메일은 필수입니다)
 }
 
 export interface ApiErrorResponse {
   success: false;
   message: string; // 전체 에러 메세지
   code: string; // 비즈니스 로직 식별용
-  errors?: ApiErrorDetail[];
+  details?: ApiErrorDetail[];
   stack?: string;
 }
 
@@ -23,7 +23,7 @@ class ApiError extends Error {
   // HTTP 상태 코드
   public readonly statusCode: number;
   public readonly code: string;
-  public readonly errors?: ApiErrorDetail[];
+  public readonly details?: ApiErrorDetail[];
   // this.**.** 접근에 타입 안전성 보장
   // readonly로 이후 코드에서 수정 불가
 
@@ -37,7 +37,7 @@ class ApiError extends Error {
     statusCode: number,
     message: string,
     code: string,
-    errors?: ApiErrorDetail[]
+    details?: ApiErrorDetail[]
   ) {
     // 상속한 Error 생성자(내부적으로 message 처리 로직 있음)에 message 전달, 초기화
     super(message);
@@ -45,7 +45,7 @@ class ApiError extends Error {
     // 상태 코드 설정 (커스텀 속성 추가)
     this.statusCode = statusCode;
     this.code = code;
-    this.errors = errors;
+    this.details = details;
 
     // Babel/TS 트랜스파일 시 프로토타입 체인 깨짐 버그 방지 (직접 프로토타입 재설정)
     Object.setPrototypeOf(this, new.target.prototype);
