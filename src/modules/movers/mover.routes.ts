@@ -3,6 +3,6 @@ import moverController from "./mover.controller";
 
 const moverRouter = express.Router();
 
-moverRouter.get("/movers", moverController.getMovers);
+moverRouter.get("/", moverController.getMovers);
 
 export default moverRouter;

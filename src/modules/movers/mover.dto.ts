@@ -26,11 +26,11 @@ export const ServiceCategorySchema = z.enum(Object.values(Category));
  */
 export const MoverListQuerySchema = z.object({
   /** 기사님 닉네임 검색 */
-  nickname: z.string().min(1).optional(),
+  keyword: z.string().min(1).optional(),
   /** 지역 필터 */
   region: RegionFilterSchema.optional(),
   /** 서비스 카테고리 필터 */
-  service_category: ServiceCategorySchema.optional(),
+  service: ServiceCategorySchema.optional(),
   /** 정렬 기준 */
   sort: MoverSortSchema.optional(),
   /** 무한 스크롤 cursor */
@@ -48,11 +48,11 @@ export type MoverListQueryDTO = z.infer<typeof MoverListQuerySchema>;
 const MoverDtoSchema = z.object({
   id: z.number(),
   nickname: z.string(),
-  driver_years: z.number(),
+  driverYears: z.number(),
   driver_intro: z.string(),
-  favorite_count: z.number(),
-  review_count: z.number(),
-  estimate_count: z.number(),
+  favoriteCount: z.number(),
+  reviewCount: z.number(),
+  estimateCount: z.number(),
   service_categories: z.array(z.string()),
 });
 

@@ -1,12 +1,19 @@
 import prisma from "../../config/db";
 
 import type { Prisma } from "../../generated/prisma";
+import type { MoverListQueryDTO } from "./mover.dto";
 
 /**
  * 기사님 리스트 조회
+ * @param nickname 검색할 닉네임
+ * @param region 검색할 지역
+ * @param service_category 검색할 서비스 카테고리
+ * @param sort 정렬 기준
+ * @param cursor 커서
+ * @param limit 페이지 크기
  * @returns 기사님 목록
  */
-async function getMovers() {
+async function getMovers({ keyword, region, service, sort, cursor, limit }: MoverListQueryDTO) {
   return prisma.driver.findMany({
     where: {
       isDelete: false,
@@ -19,15 +26,15 @@ async function getMovers() {
  * @param nickname 검색할 닉네임
  * @returns 기사님 목록
  */
-async function searchMoversByNickname(nickname: string) {
+async function searchMoversByNickname(keyword: string) {
   return prisma.driver.findMany({
     where: {
       nickname: {
-        contains: nickname, // 포함하는 닉네임 검색
+        contains: keyword, // 포함하는 키워드 검색
         mode: "insensitive", // 대소문자 구분 없이 검색
       },
       isDelete: false,
-    },
+    }
   });
 }
 

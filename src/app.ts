@@ -4,6 +4,7 @@ import { setupSwagger } from "./docs/swagger";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
 import authRouter from "./modules/auth/auth.routes";
+import moverRouter from "./modules/movers/mover.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
 
@@ -16,6 +17,7 @@ app.use(cors({ origin: true, credentials: true }));
 
 // 라우트
 app.use("/auth", authRouter);
+app.use("/movers", moverRouter);
 
 setupSwagger(app);
 
