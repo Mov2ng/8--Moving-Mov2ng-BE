@@ -165,8 +165,21 @@ async function logout(refreshToken: string) {
   // await authRepository.updateUser(decoded.id, { refreshToken: null });
 }
 
+async function me(id: string) {
+  const user = await authRepository.findUserById(id);
+  if (!user) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      "사용자 정보를 찾을 수 없습니다.",
+      HTTP_CODE.NOT_FOUND
+    );
+  }
+  return user;
+}
+
 export default {
   signup,
   login,
   logout,
+  me,
 };

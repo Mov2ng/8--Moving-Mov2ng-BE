@@ -27,6 +27,17 @@ async function createUser(
 }
 
 /**
+ * 사용자 ID로 사용자 정보 조회
+ * @param id 사용자 ID
+ * @returns 사용자 정보
+ */
+function findUserById(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+  });
+}
+
+/**
  * 사용자 이메일로 사용자 정보 조회
  * @param email 사용자 이메일
  * @param role 사용자 역할
@@ -71,6 +82,7 @@ function updateUser(
 
 export default {
   createUser,
+  findUserById,
   findUserByEmailAndRole,
   updateUser,
 };
