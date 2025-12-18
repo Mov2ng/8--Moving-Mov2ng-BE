@@ -1,23 +1,29 @@
 import express from "express";
 import cors from "cors";
-import { setupSwagger } from "./docs/swagger";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
 import authRouter from "./modules/auth/auth.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
+import { swaggerSpec } from "./docs/swagger";
+import swaggerUi from "swagger-ui-express";
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
 // CORS 설정 (개발용 전체 오리진 허용 + 쿠키 전달)
-app.use(cors({ origin: true, credentials: true })); 
+app.use(cors({ origin: true, credentials: true }));
+
+app.get("/", (_, res) => {
+  res.send("Mov2ng API");
+});
 
 // 라우트
 app.use("/auth", authRouter);
 
-setupSwagger(app);
+// Swagger UI 엔드포인트
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 공통 에러 핸들러 등록
 app.use(errorMiddleware);
