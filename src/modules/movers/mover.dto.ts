@@ -11,6 +11,8 @@ export const MoverSortSchema = z.enum([
   'confirm',  // 확정 많은순
 ]);
 
+export type MoverSortType = z.infer<typeof MoverSortSchema>;
+
 /**
  * 지역 필터
  */
