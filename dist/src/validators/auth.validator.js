@@ -1,0 +1,44 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.refreshSchema = exports.loginSchema = exports.signupSchema = void 0;
+const zod_1 = require("zod");
+/**
+ * 회원가입, 로그인, 토큰 재발급 요청 데이터 검증을 위한 Zod 스키마 정의
+ */
+exports.signupSchema = zod_1.z.object({
+    body: zod_1.z
+        .object({
+        name: zod_1.z.string().min(1, "이름을 입력해 주세요").max(50),
+        email: zod_1.z.email("유효한 이메일을 입력해 주세요"),
+        phoneNum: zod_1.z
+            .string()
+            .regex(/^[0-9]+$/, "숫자만 입력해 주세요")
+            .transform((val) => (typeof val === "string" ? val : String(val))), // 숫자면 문자열로 변환
+        password: zod_1.z
+            .string()
+            .min(8, "비밀번호는 최소 8자 이상이어야 합니다")
+            .max(128)
+            .regex(/[A-Za-z]/, { message: "비밀번호에 영문이 포함되어야 합니다." }) // 영문 1자 이상
+            .regex(/[0-9]/, { message: "비밀번호에 숫자가 포함되어야 합니다." }) // 숫자 1자 이상
+            .regex(/[!@#$%^&*()_\-+=]/, {
+            message: "비밀번호에 특수문자가 포함되어야 합니다.",
+        }), // 특수문자 1자 이상
+        passwordConfirm: zod_1.z.string(),
+    })
+        .refine((data) => data.password === data.passwordConfirm, {
+        path: ["passwordConfirm"],
+        message: "비밀번호가 일치하지 않습니다",
+    }),
+});
+exports.loginSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        email: zod_1.z.email("유효한 이메일을 입력해 주세요"),
+        password: zod_1.z.string().min(1, "비밀번호를 입력해 주세요"),
+    }),
+});
+exports.refreshSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        refreshToken: zod_1.z.string().min(1, "리프레시 토큰이 필요합니다"), // 빈 문자열 방지
+    }),
+});
+//# sourceMappingURL=auth.validator.js.map

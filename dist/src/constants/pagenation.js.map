@@ -1,0 +1,1 @@
+{"version":3,"file":"pagenation.js","sourceRoot":"","sources":["../../../src/constants/pagenation.ts"],"names":[],"mappings":";;;AAEa,QAAA,UAAU,GAAG;IACxB,YAAY,EAAE,CAAC;IACf,iBAAiB,EAAE,EAAE;IACrB,aAAa,EAAE,CAAC;IAChB,aAAa,EAAE,GAAG;CACV,CAAC;AAEE,QAAA,UAAU,GAA6C;IAClE,GAAG,EAAE,KAAK;IACV,IAAI,EAAE,MAAM;CACb,CAAC"}

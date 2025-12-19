@@ -5,18 +5,27 @@ import "./services/discordBot";
 import errorMiddleware from "./middlewares/error.middleware";
 import driverRequestRouter from "./modules/request/driver/request.driver.routes";
 
-dotenv.config();
+import authRouter from "./modules/auth/auth.routes";
+import env from "./config/env";
 
 const app = express();
 app.use(express.json());
+// app.use(cookieParser()); // 왜 기본 세팅할 때 이거 세팅 안한거지..??
 
-setupSwagger(app);
+// 모든 도메인 허용
+// app.use(cors()); // 엥 이것두..?
+
+// 라우트
+app.use("/auth", authRouter);
 
 app.use("/api", driverRequestRouter);
 
 app.use(errorMiddleware);
 
-const port = process.env.PORT || 3000;
+setupSwagger(app);
+
+
+const port = env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server running on ${port}`);
 });

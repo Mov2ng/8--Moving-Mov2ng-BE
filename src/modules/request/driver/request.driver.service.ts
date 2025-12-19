@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Category, EstimateStatus, RegionType, Role } from "@prisma/client";
 import ApiError from "../../../core/http/ApiError";
 import {
   HTTP_CODE,
@@ -8,13 +8,20 @@ import {
 import { PAGINATION } from "../../../constants/pagenation";
 import driverRequestRepository from "./request.driver.repository";
 import {
-  DriverDesignatedListQuery,
-  DriverRequestListQuery,
-} from "./request.driver.validation";
-import { DriverRequestListResult } from "./request.driver.dto";
+  DriverEstimateAcceptDto,
+  DriverEstimateRejectDto,
+  DriverDesignatedListDto,
+  DriverRequestListDto,
+  DriverRejectedEstimateListDto,
+} from "../../../validators/request.driver.validation";
+import {
+  DriverRejectedEstimateListResult,
+  DriverRequestListResult,
+} from "./request.driver.dto";
+import { ESTIMATE, ESTIMATE_MESSAGE } from "../../../constants/estimate";
 
 function normalizePagination(
-  filters: DriverRequestListQuery | DriverDesignatedListQuery
+  filters: DriverRequestListDto | DriverDesignatedListDto | DriverRejectedEstimateListDto
 ) {
   const page =
     filters.page === undefined || filters.page < PAGINATION.DEFAULT_PAGE
@@ -27,7 +34,11 @@ function normalizePagination(
   return { page, pageSize };
 }
 
-async function ensureDriver(userId: string) {
+async function ensureDriver(userId: string): Promise<{
+  driverId: number;
+  serviceCategories: Category[];
+  regions: RegionType[];
+}> {
   const user = await driverRequestRepository.findDriverProfile(userId);
 
   if (!user || user.role !== Role.DRIVER) {
@@ -47,8 +58,8 @@ async function ensureDriver(userId: string) {
     );
   }
 
-  const serviceCategories = user.service.map((service) => service.category);
-  const regions = user.region.map((region) => region.region);
+  const serviceCategories = user.service.map((service) => service.category as Category);
+  const regions = user.region.map((region) => region.region as RegionType);
 
   if (serviceCategories.length === 0 || regions.length === 0) {
     throw new ApiError(
@@ -62,9 +73,9 @@ async function ensureDriver(userId: string) {
 }
 
 function validateFilters(
-  filters: DriverRequestListQuery | DriverDesignatedListQuery,
-  serviceCategories: string[],
-  regions: string[]
+  filters: DriverRequestListDto | DriverDesignatedListDto,
+  serviceCategories: Category[],
+  regions: RegionType[]
 ) {
   if (
     filters.movingType !== undefined &&
@@ -112,6 +123,7 @@ function toResult(
       estimateId: designatedEstimate?.id,
       estimateStatus: designatedEstimate?.status,
       estimatePrice: designatedEstimate?.price,
+      userId: request.user_id,
       requestCreatedAt: request.createdAt,
       requestUpdatedAt: request.updatedAt,
     };
@@ -131,7 +143,7 @@ function toResult(
 
 async function getDriverRequestList(
   userId: string,
-  filters: DriverRequestListQuery
+  filters: DriverRequestListDto
 ): Promise<DriverRequestListResult> {
   const { page, pageSize } = normalizePagination(filters);
   const { driverId, serviceCategories, regions } = await ensureDriver(userId);
@@ -149,18 +161,181 @@ async function getDriverRequestList(
 
 async function getDriverDesignatedRequestList(
   userId: string,
-  filters: DriverDesignatedListQuery
+  filters: DriverDesignatedListDto
 ): Promise<DriverRequestListResult> {
-  const designatedFilters: DriverDesignatedListQuery = {
+  const designatedFilters: DriverDesignatedListDto = {
     ...filters,
     isDesignated: true,
   };
   return getDriverRequestList(userId, designatedFilters);
 }
 
+async function ensureRequestAccessible(
+  driverId: number,
+  requestId: number,
+  serviceCategories: Category[],
+  regions: RegionType[]
+) {
+  const { requests } = await driverRequestRepository.findDriverRequests({
+    driverId,
+    filters: {
+      requestId,
+      page: PAGINATION.DEFAULT_PAGE,
+      pageSize: PAGINATION.MIN_PAGE_SIZE,
+      sort: "soonest",
+    },
+    serviceCategories,
+    regions,
+  });
+
+  const request = requests[0];
+  if (!request) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      HTTP_MESSAGE.NOT_FOUND,
+      HTTP_CODE.NOT_FOUND
+    );
+  }
+
+  return request.id;
+}
+
+async function createEstimateAndApprove(
+  userId: string,
+  body: DriverEstimateAcceptDto
+) {
+  const { driverId, serviceCategories, regions } = await ensureDriver(userId);
+  await ensureRequestAccessible(driverId, body.requestId, serviceCategories, regions);
+
+  const existing = await driverRequestRepository.findLatestEstimate(
+    driverId,
+    body.requestId
+  );
+
+  if (existing) {
+    if (existing.status === EstimateStatus.ACCEPTED) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        ESTIMATE_MESSAGE.ALREADY_DECIDED,
+        HTTP_CODE.BAD_REQUEST
+      );
+    }
+
+    if (existing.status === EstimateStatus.REJECTED) {
+      // 반려 → 승인으로 수정 허용
+      return driverRequestRepository.updateEstimate({
+        estimateId: existing.id,
+        status: EstimateStatus.ACCEPTED,
+        requestReason: body.requestReason,
+        price: body.price ?? 0,
+        isRequest: true,
+      });
+    }
+
+    // PENDING 등은 승인으로 업데이트
+    return driverRequestRepository.updateEstimate({
+      estimateId: existing.id,
+      status: EstimateStatus.ACCEPTED,
+      requestReason: body.requestReason,
+      price: body.price ?? 0,
+      isRequest: true,
+    });
+  }
+
+  return driverRequestRepository.createEstimate({
+    driverId,
+    requestId: body.requestId,
+    status: EstimateStatus.ACCEPTED,
+    requestReason: body.requestReason,
+    price: body.price ?? 0,
+    isRequest: true,
+  });
+}
+
+async function createEstimateAndReject(
+  userId: string,
+  body: DriverEstimateRejectDto
+) {
+  const { driverId, serviceCategories, regions } = await ensureDriver(userId);
+  await ensureRequestAccessible(driverId, body.requestId, serviceCategories, regions);
+
+  const existing = await driverRequestRepository.findLatestEstimate(
+    driverId,
+    body.requestId
+  );
+
+  if (existing) {
+    if (existing.status === EstimateStatus.ACCEPTED || existing.status === EstimateStatus.REJECTED) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        ESTIMATE_MESSAGE.ALREADY_DECIDED,
+        HTTP_CODE.BAD_REQUEST
+      );
+    }
+
+    // PENDING 등은 반려로 업데이트
+    return driverRequestRepository.updateEstimate({
+      estimateId: existing.id,
+      status: EstimateStatus.REJECTED,
+      requestReason: body.requestReason,
+      price: ESTIMATE.REJECT_PRICE,
+      isRequest: true,
+    });
+  }
+
+  return driverRequestRepository.createEstimate({
+    driverId,
+    requestId: body.requestId,
+    status: EstimateStatus.REJECTED,
+    requestReason: body.requestReason,
+    price: ESTIMATE.REJECT_PRICE,
+    isRequest: true,
+  });
+}
+
+async function getDriverRejectedEstimates(
+  userId: string,
+  filters: DriverRejectedEstimateListDto
+): Promise<DriverRejectedEstimateListResult> {
+  const { page, pageSize } = normalizePagination(filters);
+  const { driverId } = await ensureDriver(userId);
+
+  const { totalItems, estimates } = await driverRequestRepository.findRejectedEstimates({
+    driverId,
+    page,
+    pageSize,
+  });
+
+  const items = estimates.map((estimate) => ({
+    estimateId: estimate.id,
+    requestId: estimate.request_id,
+    driverId: estimate.driver_id,
+    status: estimate.status,
+    requestReason: estimate.request_reson ?? undefined,
+    isRequest: estimate.isRequest,
+    price: estimate.price,
+    createdAt: estimate.createdAt,
+    updatedAt: estimate.updatedAt,
+    request: estimate.request
+      ? {
+          movingType: estimate.request.moving_type,
+          movingDate: estimate.request.moving_data,
+          origin: estimate.request.origin,
+          destination: estimate.request.destination,
+        }
+      : undefined,
+  }));
+
+  const totalPages = pageSize === 0 ? 0 : Math.ceil(totalItems / pageSize);
+  return { items, page, pageSize, totalItems, totalPages };
+}
+
 const driverRequestService = {
   getDriverRequestList,
   getDriverDesignatedRequestList,
+  createEstimateAndApprove,
+  createEstimateAndReject,
+  getDriverRejectedEstimates,
 };
 
 export default driverRequestService;

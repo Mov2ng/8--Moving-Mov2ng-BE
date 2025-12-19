@@ -10,18 +10,57 @@ export type DriverRequestListItem = {
   estimateId?: number;
   estimateStatus?: EstimateStatus;
   estimatePrice?: number;
+  userId?: string;
   requestCreatedAt: Date;
   requestUpdatedAt: Date;
 };
 
-export interface DriverRequestListResult {
+export type DriverEstimateActionResponse = {
+  estimateId: number;
+  requestId: number;
+  driverId: number;
+  status: EstimateStatus;
+  requestReason: string;
+  isRequest: boolean;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type DriverRejectedEstimateItem = {
+  estimateId: number;
+  requestId: number;
+  driverId: number;
+  status: EstimateStatus;
+  requestReason?: string;
+  isRequest: boolean;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+  request?: {
+    movingType: Category;
+    movingDate: Date;
+    origin: string;
+    destination: string;
+  };
+};
+
+export type DriverRejectedEstimateListResult = {
+  items: DriverRejectedEstimateItem[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};
+
+export type DriverRequestListResult = {
   items: DriverRequestListItem[];
   designatedCount: number;
   page: number;
   pageSize: number;
   totalItems: number;
   totalPages: number;
-}
+};
 
 export type DriverRequestListResponse = DriverRequestListResult;
 

@@ -1,17 +1,21 @@
-import 'dotenv/config';
-import { PrismaClient } from "../generated/prisma";
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
+import env from "./env";
 
 /**
  * DB 연결 설정
  * - $connect() 첫 호출에 DB 연결 지연 생성
  */
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not set');
-}
 
-const adapter = new PrismaPg({ connectionString });
+const databaseUrl = env.DATABASE_URL;
+
+// PrismaPg 어댑터 생성
+const adapter = new PrismaPg({
+  // 데이터베이스 URL
+  connectionString: databaseUrl,
+});
+
+// PrismaClient 인스턴스 생성
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;

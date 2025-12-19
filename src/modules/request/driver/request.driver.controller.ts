@@ -2,30 +2,33 @@ import { Request, Response } from "express";
 import ApiError from "../../../core/http/ApiError";
 import ApiResponse from "../../../core/http/ApiResponse";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../../../constants/http";
-import asyncWrapper from "../../../utils/asyncWrapper";
+import { asyncWrapper } from "../../../utils/asyncWrapper";
 import driverRequestService from "./request.driver.service";
 import { toDriverRequestListResponseDto } from "./request.driver.dto";
 import {
-  DriverDesignatedListQuery,
-  DriverRequestListQuery,
-} from "./request.driver.validation";
+  DriverDesignatedListDto,
+  DriverDesignatedListPayload,
+  DriverEstimateAcceptDto,
+  DriverEstimateAcceptPayload,
+  DriverEstimateRejectDto,
+  DriverEstimateRejectPayload,
+  DriverRequestListDto,
+  DriverRequestListPayload,
+  DriverRejectedEstimateListDto,
+  DriverRejectedEstimateListPayload,
+} from "../../../validators/request.driver.validation";
 
 const getDriverRequests = asyncWrapper(
-  async (req: Request & { user?: { id: string } }, res: Response) => {
-    const validated = res.locals.validated as { query: DriverRequestListQuery };
-
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new ApiError(
-        HTTP_STATUS.AUTH_REQUIRED,
-        HTTP_MESSAGE.AUTH_REQUIRED,
-        HTTP_CODE.AUTH_REQUIRED
-      );
-    }
+  async (
+    req: Request<{}, {}, DriverRequestListPayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { query: DriverRequestListPayload };
+    const { userId, ...filters } = validated.query;
 
     const data = await driverRequestService.getDriverRequestList(
       userId,
-      validated.query
+      filters as DriverRequestListDto
     );
     const response = toDriverRequestListResponseDto(data);
     return ApiResponse.success(res, response);
@@ -33,32 +36,78 @@ const getDriverRequests = asyncWrapper(
 );
 
 const getDriverDesignatedRequests = asyncWrapper(
-  async (req: Request & { user?: { id: string } }, res: Response) => {
-    const validated = res.locals.validated as {
-      query: DriverDesignatedListQuery;
-    };
-
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new ApiError(
-        HTTP_STATUS.AUTH_REQUIRED,
-        HTTP_MESSAGE.AUTH_REQUIRED,
-        HTTP_CODE.AUTH_REQUIRED
-      );
-    }
+  async (
+    req: Request<{}, {}, DriverDesignatedListPayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { query: DriverDesignatedListPayload };
+    const { userId, ...filters } = validated.query;
 
     const data = await driverRequestService.getDriverDesignatedRequestList(
       userId,
-      validated.query
+      filters as DriverDesignatedListDto
     );
     const response = toDriverRequestListResponseDto(data);
     return ApiResponse.success(res, response);
   }
 );
 
+const acceptEstimate = asyncWrapper(
+  async (
+    req: Request<{}, {}, DriverEstimateAcceptPayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { body: DriverEstimateAcceptPayload };
+    const { userId, ...body } = validated.body;
+
+    const data = await driverRequestService.createEstimateAndApprove(
+      userId,
+      body as DriverEstimateAcceptDto
+    );
+    return ApiResponse.success(res, data);
+  }
+);
+
+const rejectEstimate = asyncWrapper(
+  async (
+    req: Request<{}, {}, DriverEstimateRejectPayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { body: DriverEstimateRejectPayload };
+    const { userId, ...body } = validated.body;
+
+    const data = await driverRequestService.createEstimateAndReject(
+      userId,
+      body as DriverEstimateRejectDto
+    );
+    return ApiResponse.success(res, data);
+  }
+);
+
+const getRejectedEstimates = asyncWrapper(
+  async (
+    req: Request<{}, {}, DriverRejectedEstimateListPayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as {
+      query: DriverRejectedEstimateListPayload;
+    };
+    const { userId, ...filters } = validated.query;
+
+    const data = await driverRequestService.getDriverRejectedEstimates(
+      userId,
+      filters as DriverRejectedEstimateListDto
+    );
+    return ApiResponse.success(res, data);
+  }
+);
+
 const driverRequestController = {
   getDriverRequests,
   getDriverDesignatedRequests,
+  acceptEstimate,
+  rejectEstimate,
+  getRejectedEstimates,
 };
 
 export default driverRequestController;

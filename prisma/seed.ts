@@ -8,6 +8,10 @@ const connectionString = `${process.env.DATABASE_URL}`
 const adapter = new PrismaPg({ connectionString })
 const prisma = new PrismaClient({ adapter })
 
+const SEED_DRIVER_USER_ID = "11111111-1111-1111-1111-111111111111";
+const SEED_USER_ID = "22222222-2222-2222-2222-222222222222";
+const SEED_REQUEST_ID = 900001;
+
 async function main() {
   try {
     console.log("🌱 시딩 데이터 생성 시작...");
@@ -293,6 +297,90 @@ async function main() {
     console.log("✅ 견적 생성 완료");
 
     // 알림 생성
+    // driver.seed 통합: 테스트용 시드 데이터
+    const seedDriverUser = await prisma.user.create({
+      data: {
+        id: SEED_DRIVER_USER_ID,
+        email: "seed.driver1@example.com",
+        password: hashedPassword,
+        phone_number: "01099990001",
+        name: "시드기사1",
+        role: "DRIVER",
+        provider: "LOCAL",
+      },
+    });
+
+    await prisma.service.createMany({
+      data: [
+        { user_id: seedDriverUser.id, category: "SMALL" },
+        { user_id: seedDriverUser.id, category: "HOME" },
+      ],
+    });
+
+    await prisma.region.createMany({
+      data: [
+        { user_id: seedDriverUser.id, region: "SEOUL" },
+        { user_id: seedDriverUser.id, region: "GYEONGGI" },
+      ],
+    });
+
+    const seedDriverProfile = await prisma.driver.create({
+      data: {
+        user_id: seedDriverUser.id,
+        nickname: "테스트기사1",
+        driver_years: 3,
+        driver_intro: "테스트용 기사 프로필입니다.",
+        driver_content: "시드 데이터로 생성된 기사입니다.",
+      },
+    });
+
+    const seedUser = await prisma.user.create({
+      data: {
+        id: SEED_USER_ID,
+        email: "seed.user1@example.com",
+        password: hashedPassword,
+        phone_number: "01099991001",
+        name: "시드유저1",
+        role: "USER",
+        provider: "LOCAL",
+      },
+    });
+
+    const seedRequest = await prisma.request.create({
+      data: {
+        id: SEED_REQUEST_ID,
+        user_id: seedUser.id,
+        moving_type: "SMALL",
+        moving_data: new Date("2025-01-15T10:00:00Z"),
+        origin: "서울 강남구",
+        destination: "서울 송파구",
+      },
+    });
+
+    await prisma.estimate.createMany({
+      data: [
+        {
+          request_id: seedRequest.id,
+          driver_id: seedDriverProfile.id,
+          status: "PENDING",
+          price: 100000,
+          isRequest: false,
+        },
+        {
+          request_id: seedRequest.id,
+          driver_id: seedDriverProfile.id,
+          status: "REJECTED",
+          price: 0,
+          isRequest: true,
+          request_reson: "테스트 반려 사유",
+        },
+      ],
+    });
+
+    console.log("[driver.seed] 통합 완료");
+    console.log(`- driver userId: ${seedDriverUser.id}`);
+    console.log(`- requestId: ${seedRequest.id}`);
+
     await prisma.notice.createMany({
       data: [
         {

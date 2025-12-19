@@ -3,9 +3,10 @@ import prisma from "../../../config/db";
 import { SORT_ORDER } from "../../../constants/pagenation";
 import { isAddressInServiceRegions } from "../../../utils/region.utils";
 import {
-  DriverDesignatedListQuery,
-  DriverRequestListQuery,
-} from "./request.driver.validation";
+  DriverDesignatedListDto,
+  DriverRequestListDto,
+} from "../../../validators/request.driver.validation";
+import { DriverEstimateActionResponse } from "./request.driver.dto";
 
 export type DriverProfile = (User & {
   driver: { id: number }[];
@@ -13,15 +14,19 @@ export type DriverProfile = (User & {
   region: { region: RegionType }[];
 }) | null;
 
-export interface FindDriverRequestsParams {
+export type FindDriverRequestsParams = {
   driverId: number;
-  filters: DriverRequestListQuery | DriverDesignatedListQuery;
+  filters: DriverRequestListDto | DriverDesignatedListDto;
   serviceCategories: Category[];
   regions: RegionType[];
-}
+};
 
 export type DriverRequestWithEstimates = Prisma.RequestGetPayload<{
   include: { estimates: true };
+}>;
+
+export type DriverEstimateWithRequest = Prisma.estimateGetPayload<{
+  include: { request: true };
 }>;
 
 async function findDriverProfile(userId: string): Promise<DriverProfile> {
@@ -44,8 +49,7 @@ async function findDriverRequests({
   totalItems: number;
   requests: DriverRequestWithEstimates[];
 }> {
-  const { movingType, isDesignated, sort, region } = filters;
-  const requestId = "requestId" in filters ? filters.requestId : undefined;
+  const { movingType, isDesignated, sort, region, requestId } = filters;
 
   const where: Prisma.RequestWhereInput = {
     ...(requestId !== undefined && { id: requestId }),
@@ -95,6 +99,96 @@ async function findDriverRequests({
 const driverRequestRepository = {
   findDriverProfile,
   findDriverRequests,
+  async createEstimate(params: {
+    driverId: number;
+    requestId: number;
+    status: Prisma.estimateCreateInput["status"];
+    requestReason: string;
+    price: number;
+    isRequest: boolean;
+  }): Promise<DriverEstimateActionResponse> {
+    const estimate = await prisma.estimate.create({
+      data: {
+        driver_id: params.driverId,
+        request_id: params.requestId,
+        status: params.status,
+        request_reson: params.requestReason,
+        price: params.price,
+        isRequest: params.isRequest,
+      },
+    });
+
+    return {
+      estimateId: estimate.id,
+      requestId: estimate.request_id,
+      driverId: estimate.driver_id,
+      status: estimate.status,
+      requestReason: estimate.request_reson ?? "",
+      isRequest: estimate.isRequest,
+      price: estimate.price,
+      createdAt: estimate.createdAt,
+      updatedAt: estimate.updatedAt,
+    };
+  },
+  async findLatestEstimate(driverId: number, requestId: number) {
+    return prisma.estimate.findFirst({
+      where: { driver_id: driverId, request_id: requestId },
+      orderBy: { createdAt: SORT_ORDER.DESC },
+    });
+  },
+  async updateEstimate(params: {
+    estimateId: number;
+    status: Prisma.estimateUpdateInput["status"];
+    requestReason?: string;
+    price: number;
+    isRequest: boolean;
+  }): Promise<DriverEstimateActionResponse> {
+    const updated = await prisma.estimate.update({
+      where: { id: params.estimateId },
+      data: {
+        status: params.status,
+        request_reson: params.requestReason,
+        price: params.price,
+        isRequest: params.isRequest,
+      },
+    });
+
+    return {
+      estimateId: updated.id,
+      requestId: updated.request_id,
+      driverId: updated.driver_id,
+      status: updated.status,
+      requestReason: updated.request_reson ?? "",
+      isRequest: updated.isRequest,
+      price: updated.price,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  },
+  async findRejectedEstimates(params: {
+    driverId: number;
+    page: number;
+    pageSize: number;
+  }): Promise<{ totalItems: number; estimates: DriverEstimateWithRequest[] }> {
+    const where: Prisma.estimateWhereInput = {
+      driver_id: params.driverId,
+      status: "REJECTED",
+      isRequest: true,
+    };
+
+    const [totalItems, estimates] = await prisma.$transaction([
+      prisma.estimate.count({ where }),
+      prisma.estimate.findMany({
+        where,
+        orderBy: { createdAt: SORT_ORDER.DESC },
+        skip: (params.page - 1) * params.pageSize,
+        take: params.pageSize,
+        include: { request: true },
+      }),
+    ]);
+
+    return { totalItems, estimates };
+  },
 };
 
 export default driverRequestRepository;
