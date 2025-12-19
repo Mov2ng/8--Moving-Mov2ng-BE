@@ -17,7 +17,45 @@ interface JwtUserPayload extends JwtPayload {
 }
 
 /**
- * JWT 토큰 검증 및 사용자 인증 미들웨어
+ * 선택적 인증 미들웨어
+ * - 토큰이 있으면 검증 후 req.user 설정
+ * - 토큰이 없어도 요청은 계속 진행 (req.user는 undefined)
+ * - 비로그인 사용자도 접근 가능한 API에서 사용
+ */
+export async function optionalAuthMiddleware(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) {
+  const authHeader = req.headers.authorization;
+
+  // 토큰이 없으면 그냥 통과 (비로그인 상태)
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET);
+
+    if (typeof decoded === "object" && decoded !== null && "id" in decoded) {
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      if (user) {
+        req.user = { id: user.id };
+      }
+    }
+  } catch (error) {
+    // 토큰이 유효하지 않아도 에러 없이 통과 (비로그인 상태로 처리)
+  }
+
+  next();
+}
+
+/**
+ * JWT 토큰 검증 및 사용자 인증 미들웨어 (필수)
+ * - 토큰이 없거나 유효하지 않으면 에러 반환
+ * - 로그인 필수 API에서 사용
  * @param req Express 요청 객체
  * @param res Express 응답 객체
  * @param next 다음 미들웨어 호출
@@ -68,7 +106,7 @@ export async function authMiddleware(
           HTTP_MESSAGE.USER_NOT_FOUND,
           HTTP_CODE.USER_NOT_FOUND
         )
-      ); 
+      );
     }
 
     // req.user에 안전히 ID 할당
