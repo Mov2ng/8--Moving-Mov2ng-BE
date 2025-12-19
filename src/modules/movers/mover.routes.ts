@@ -10,7 +10,7 @@ const moverRouter = express.Router();
 // 기사님 목록 조회 - 로그인 선택 (로그인 시 isFavorite 확인 가능)
 moverRouter.get(
   "/",
-  // optionalAuthMiddleware, // TODO: 타입 에러 해결 필요 
+  // optionalAuthMiddleware, // TODO: 타입 에러 해결 필요
   moverController.getMovers
 );
 // 기사님 상세 조회 - 전체 데이터 - 로그인 선택
