@@ -146,3 +146,5 @@ export async function authMiddleware(
     );
   }
 }
+
+export default authMiddleware;

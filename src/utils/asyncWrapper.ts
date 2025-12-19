@@ -14,6 +14,7 @@ export type AsyncHandler<
   req: Request<P, ResBody, ReqBody, ReqQuery>,
   res: Response<ResBody>,
   next: NextFunction
+
 ) => Promise<Response<ResBody>>;
 
 /**
@@ -42,3 +43,14 @@ export function asyncWrapper<
     }
   };
 }
+
+// 사용 예시 (auth.controller.ts)
+// import asyncWrapper from '../utils/asyncWrapper';
+// ...
+// export const login = asyncWrapper(async (req, res) => {
+//   // try/catch 없이 비즈니스 로직만 작성
+//   // 라우터(RequestHandler)가 제네릭 타입을 결정 → 타입이 asyncWrapper로 전달
+//   // → 타입을 별도 지정할 필요 XX
+//   // 에러 발생 시 next(err)로 자동 전달되어 공통 errorMiddleware에서 처리
+// });
+

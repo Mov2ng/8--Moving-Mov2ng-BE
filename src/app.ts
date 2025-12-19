@@ -1,7 +1,9 @@
-import express from "express";
+﻿import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
+import driverRequestRouter from "./modules/request/driver/request.driver.routes";
+
 import authRouter from "./modules/auth/auth.routes";
 import moverRouter from "./modules/movers/mover.routes";
 import requestUserRouter from "./modules/request/user/request.user.routes";
@@ -25,6 +27,10 @@ app.get("/", (_, res) => {
 app.use("/auth", authRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
+
+app.use("/api", driverRequestRouter);
+
+app.use(errorMiddleware);
 
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
