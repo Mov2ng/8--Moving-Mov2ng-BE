@@ -12,6 +12,8 @@ export const signupSchema = z.object({
       phoneNum: z
         .string()
         .regex(/^[0-9]+$/, "숫자만 입력해 주세요")
+        .min(10, "전화번호는 최소 10자 이상이어야 합니다")
+        .max(11, "전화번호는 최대 11자 이하이어야 합니다")
         .transform((val) => (typeof val === "string" ? val : String(val))), // 숫자면 문자열로 변환
       password: z
         .string()
@@ -23,6 +25,11 @@ export const signupSchema = z.object({
           message: "비밀번호에 특수문자가 포함되어야 합니다.",
         }), // 특수문자 1자 이상
       passwordConfirm: z.string(),
+      role: z
+        .enum(["USER", "DRIVER"], {
+          message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+        })
+        .default("USER"),
     })
     .refine((data) => data.password === data.passwordConfirm, {
       path: ["passwordConfirm"],
@@ -32,6 +39,11 @@ export const signupSchema = z.object({
 
 export const loginSchema = z.object({
   body: z.object({
+    role: z
+      .enum(["USER", "DRIVER"], {
+        message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+      })
+      .default("USER"),
     email: z.email("유효한 이메일을 입력해 주세요"),
     password: z.string().min(1, "비밀번호를 입력해 주세요"),
   }),

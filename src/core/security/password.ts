@@ -27,6 +27,24 @@ export async function verifyPassword(
   plainPwd: string,
   storedHash: string
 ): Promise<boolean> {
+  // 입력값 검증
+  if (!plainPwd || !storedHash) {
+    console.log("[verifyPassword] 입력값 누락:", {
+      hasPlainPwd: !!plainPwd,
+      hasStoredHash: !!storedHash,
+    });
+    return false;
+  }
+
+  // argon2 해시는 항상 $argon2로 시작해야 함
+  if (!storedHash.startsWith("$argon2")) {
+    console.log(
+      "[verifyPassword] 잘못된 해시 형식:",
+      storedHash.substring(0, 20)
+    );
+    return false;
+  }
+
   try {
     // 상수 시간 비교 알고리즘 사용해 추가 비교 함수 필요 XX
     const isValid = await argon2.verify(storedHash, plainPwd);
