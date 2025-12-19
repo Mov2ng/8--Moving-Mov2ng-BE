@@ -11,6 +11,7 @@ import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
+import estimateRouter from "./modules/estimate/estimate.routes";
 
 const app = express();
 app.use(express.json());
@@ -25,6 +26,7 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
+app.use("/estimate", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
 

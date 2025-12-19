@@ -1,8 +1,9 @@
-import { Request, Response } from "express";
 import { asyncWrapper } from "../../utils/asyncWrapper";
-import { MoverListQueryDTO } from "./mover.dto";
 import ApiResponse from "../../core/http/ApiResponse";
 import moverService from "./mover.service";
+
+import type { Request, Response } from "express";
+import type { MoverListQueryDTO } from "./mover.dto";
 
 // 기사님 목록 조회
 const getMovers = asyncWrapper(

@@ -1,10 +1,10 @@
+import { Prisma } from "../../generated/prisma";
 import moverRepository from "./mover.repository";
 
 import type { MoverListQueryDTO, MoverSortType } from "./mover.dto";
-import { Prisma } from "../../generated/prisma";
 
 async function getMovers(query: MoverListQueryDTO, userId?: string) {
-  // 조회 조건 정리는 service에서 진행
+  // 조회 조건 정리는 service에서 진행 
   const where: Prisma.DriverWhereInput = {
     isDelete: false,
   };
