@@ -3,6 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
 import authRouter from "./modules/auth/auth.routes";
+import moverRouter from "./modules/movers/mover.routes";
+import requestUserRouter from "./modules/request/user/request.user.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
@@ -21,6 +23,8 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
+app.use("/movers", moverRouter);
+app.use("/request/user", requestUserRouter);
 
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
