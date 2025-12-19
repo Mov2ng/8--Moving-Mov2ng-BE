@@ -3,12 +3,13 @@ import authController from "./auth.controller";
 import validate from "../../middlewares/validate.middleware";
 import { loginSchema, signupSchema, refreshSchema } from "../../validators/auth.validator";
 import { authMiddleware } from "../../middlewares/auth.middleware";
+import { guestOnlyMiddleware, userOnlyMiddleware } from "../../middlewares/role.middleware";
 
 const authRouter = express.Router();
 
-authRouter.post("/signup", validate(signupSchema), authController.signup);
+authRouter.post("/signup", validate(signupSchema), guestOnlyMiddleware, authController.signup);
 
-authRouter.post("/login", validate(loginSchema), authController.login);
+authRouter.post("/login", validate(loginSchema), guestOnlyMiddleware, authController.login);
 
 authRouter.post("/logout", authMiddleware, authController.logout);
 

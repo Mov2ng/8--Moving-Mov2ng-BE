@@ -1,20 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import ApiError from "../core/http/ApiError";
 import env from "../config/env";
 import prisma from "../config/db";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
-
-// Request 타입 확장 // 이유: Express 기본 Request 객체에는 'user' 속성이 없기 때문에, TS 컴파일 에러를 방지하기 위해 확장합니다.
-// (권장: src/types/express.d.ts 에서 전역으로 선언하면 이 인터페이스는 필요 없어집니다)
-interface AuthRequest extends Request {
-  user?: { id: string };
-}
-
-// JWT Payload 타입 정의 (예상치 못한 에러 방지를 위해)
-interface JwtUserPayload extends JwtPayload {
-  id?: number;
-}
 
 /**
  * JWT 토큰 검증 및 사용자 인증 미들웨어
@@ -23,7 +12,7 @@ interface JwtUserPayload extends JwtPayload {
  * @param next 다음 미들웨어 호출
  */
 export async function authMiddleware(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -68,11 +57,16 @@ export async function authMiddleware(
           HTTP_MESSAGE.USER_NOT_FOUND,
           HTTP_CODE.USER_NOT_FOUND
         )
-      ); 
+      );
     }
 
+    // TODO: 필요시 추가 검증
+    // - 사용자 상태 체크 (isDelete)
+    // - 계정 활성화 상태
+    // - 토큰 블랙리스트 체크
+
     // req.user에 안전히 ID 할당
-    req.user = { id: user.id };
+    req.user = { id: user.id, role: user.role };
 
     next();
   } catch (error) {

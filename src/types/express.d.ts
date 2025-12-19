@@ -1,4 +1,5 @@
 import "express";
+import { Role } from "@prisma/client";
 
 /**
  * express.Request 인터페이스 전역 타입 확장
@@ -7,6 +8,6 @@ import "express";
  */
 declare module "express" {
   export interface Request {
-    user?: { id: string };
+    user?: { id: string; role: Role };
   }
 }

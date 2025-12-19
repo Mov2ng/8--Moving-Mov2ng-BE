@@ -78,34 +78,6 @@ async function login(
   req: Request,
   role: string
 ) {
-  // 쿠키에서 refreshToken 확인
-  const refreshToken = req.cookies?.refreshToken;
-
-  // 이미 로그인 상태인 경우 체크
-  if (refreshToken) {
-    try {
-      // refreshToken 검증 → 성공하면 유효한 토큰이 있다는 의미 = 이미 로그인 상태
-      verifyToken(refreshToken);
-
-      // verifyToken이 성공했다면 이미 로그인한 상태
-      throw new ApiError(
-        HTTP_STATUS.BAD_REQUEST,
-        "이미 로그인한 상태입니다.",
-        HTTP_CODE.BAD_REQUEST
-      );
-    } catch (error) {
-      // "이미 로그인 상태" 에러는 다시 throw
-      if (
-        error instanceof ApiError &&
-        error.statusCode === HTTP_STATUS.BAD_REQUEST
-      ) {
-        throw error;
-      }
-      // verifyToken이 실패한 경우 (토큰 만료/무효) → 로그인 진행 허용
-      // 에러를 무시하고 로그인 로직 계속 진행
-    }
-  }
-
   // role 검증
   if (role !== "USER" && role !== "DRIVER") {
     throw new ApiError(
