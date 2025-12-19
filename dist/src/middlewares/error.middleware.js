@@ -16,6 +16,7 @@ const http_1 = require("../constants/http");
 function errorMiddleware(err, // 왜 unknown이라고 둔거지?
 req, res, next) {
     // ANCHOR: middleware 함수기 때문에 예외적으로 err라고 선언하나, 필요시 error로 변경
+    console.log(err);
     // 기본 응답 객체 (예기치 않은 에러)
     let response = {
         success: false,
@@ -28,21 +29,21 @@ req, res, next) {
             success: false,
             message: err.message,
             code: err.code,
-            errors: err.errors,
+            details: err.details,
         };
         // 개발 환경일 때만 스택 노출 (보안)
         if (env_1.default.NODE_ENV === "development") {
             response.stack = err.stack;
         }
+        // 에러 로깅: 스택이 있으면 메세지 대신 스택을 메인 출력으로 사용
+        logger_1.default.error(err.stack || response.message, {
+            message: response.message,
+            statusCode: err.statusCode,
+            path: req.path,
+            method: req.method,
+            stack: response.stack,
+        });
     }
-    // 에러 로깅
-    logger_1.default.error({
-        message: response.message,
-        statusCode: err instanceof ApiError_1.default ? err.statusCode : http_1.HTTP_STATUS.INTERNAL_ERROR,
-        stack: err instanceof ApiError_1.default ? err.stack : undefined,
-        path: req.path,
-        method: req.method,
-    });
     return res
         .status(err instanceof ApiError_1.default ? err.statusCode : http_1.HTTP_STATUS.INTERNAL_ERROR)
         .json(response);

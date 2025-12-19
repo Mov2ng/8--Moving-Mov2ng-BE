@@ -16,13 +16,13 @@ class ApiError extends Error {
      * @param stack       리모트 에러 전파 시 외부에서 전달할 스택 트레이스 (사용시 활성화)
      */
     // constructor(statusCode: number, message: string, stack = '') {
-    constructor(statusCode, message, code, errors) {
+    constructor(statusCode, message, code, details) {
         // 상속한 Error 생성자(내부적으로 message 처리 로직 있음)에 message 전달, 초기화
         super(message);
         // 상태 코드 설정 (커스텀 속성 추가)
         this.statusCode = statusCode;
         this.code = code;
-        this.errors = errors;
+        this.details = details;
         // Babel/TS 트랜스파일 시 프로토타입 체인 깨짐 버그 방지 (직접 프로토타입 재설정)
         Object.setPrototypeOf(this, new.target.prototype);
         /*

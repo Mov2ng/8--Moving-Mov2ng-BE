@@ -4,7 +4,7 @@ import { HTTP_STATUS } from "../../constants/http";
 import ApiResponse from "../../core/http/ApiResponse";
 import { asyncWrapper } from "../../utils/asyncWrapper";
 import logger from "../../utils/logger";
-import { LoginDto, SignupDto } from "./auth.dto";
+import { LoginDto, SignupDto } from "./auth.dto"; 
 
 const signup = asyncWrapper(
   async (req: Request<{}, {}, SignupDto>, res: Response) => {

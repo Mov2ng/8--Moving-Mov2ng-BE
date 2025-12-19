@@ -10,6 +10,8 @@ authRouter.post("/signup", validate(signupSchema), authController.signup);
 
 authRouter.post("/login", validate(loginSchema), authController.login);
 
-authRouter.post("/logout",  authMiddleware, authController.logout);
+authRouter.post("/logout", authMiddleware, authController.logout);
+
+authRouter.get("/me", authMiddleware, authController.me);
 
 export default authRouter;

@@ -13,6 +13,8 @@ exports.signupSchema = zod_1.z.object({
         phoneNum: zod_1.z
             .string()
             .regex(/^[0-9]+$/, "숫자만 입력해 주세요")
+            .min(10, "전화번호는 최소 10자 이상이어야 합니다")
+            .max(11, "전화번호는 최대 11자 이하이어야 합니다")
             .transform((val) => (typeof val === "string" ? val : String(val))), // 숫자면 문자열로 변환
         password: zod_1.z
             .string()
@@ -24,6 +26,11 @@ exports.signupSchema = zod_1.z.object({
             message: "비밀번호에 특수문자가 포함되어야 합니다.",
         }), // 특수문자 1자 이상
         passwordConfirm: zod_1.z.string(),
+        role: zod_1.z
+            .enum(["USER", "DRIVER"], {
+            message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+        })
+            .default("USER"),
     })
         .refine((data) => data.password === data.passwordConfirm, {
         path: ["passwordConfirm"],
@@ -32,6 +39,11 @@ exports.signupSchema = zod_1.z.object({
 });
 exports.loginSchema = zod_1.z.object({
     body: zod_1.z.object({
+        role: zod_1.z
+            .enum(["USER", "DRIVER"], {
+            message: "role은 'USER' 또는 'DRIVER'만 가능합니다",
+        })
+            .default("USER"),
         email: zod_1.z.email("유효한 이메일을 입력해 주세요"),
         password: zod_1.z.string().min(1, "비밀번호를 입력해 주세요"),
     }),

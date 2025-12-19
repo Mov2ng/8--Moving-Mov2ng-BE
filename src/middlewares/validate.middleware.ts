@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import ApiError from "../core/http/ApiError";
+import ApiError, { ApiErrorDetail } from "../core/http/ApiError";
 import z from "zod";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
 
@@ -19,17 +19,20 @@ function validate<T>(schema: z.ZodType<T>) {
     });
 
     if (!result.success) {
-      const errorMessage = result.error.issues.map((issue) => ({
-        // 오류 발생 필드
-        path: issue.path.length > 0 ? issue.path.join(".") : "root",
-        // 오류 메세지 (zod 생성)
-        message: issue.message,
-      }));
+      const errorMessage: ApiErrorDetail[] = result.error.issues.map(
+        (issue) => ({
+          // 오류 발생 필드
+          field: issue.path.length > 0 ? issue.path.join(".") : "root",
+          // 오류 메세지 (zod 생성)
+          reason: issue.message,
+        })
+      );
       return next(
         new ApiError(
           HTTP_STATUS.BAD_REQUEST,
           HTTP_MESSAGE.BAD_REQUEST,
-          HTTP_CODE.BAD_REQUEST
+          HTTP_CODE.BAD_REQUEST,
+          errorMessage
         )
       );
     }

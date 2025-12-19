@@ -22,11 +22,11 @@ function validate(schema) {
         if (!result.success) {
             const errorMessage = result.error.issues.map((issue) => ({
                 // 오류 발생 필드
-                path: issue.path.length > 0 ? issue.path.join(".") : "root",
+                field: issue.path.length > 0 ? issue.path.join(".") : "root",
                 // 오류 메세지 (zod 생성)
-                message: issue.message,
+                reason: issue.message,
             }));
-            return next(new ApiError_1.default(http_1.HTTP_STATUS.BAD_REQUEST, http_1.HTTP_MESSAGE.BAD_REQUEST, http_1.HTTP_CODE.BAD_REQUEST));
+            return next(new ApiError_1.default(http_1.HTTP_STATUS.BAD_REQUEST, http_1.HTTP_MESSAGE.BAD_REQUEST, http_1.HTTP_CODE.BAD_REQUEST, errorMessage));
         }
         // 성공할 경우 타입을 안전한 값으로 저장
         res.locals.validated = result.data;

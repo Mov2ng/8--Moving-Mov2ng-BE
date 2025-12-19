@@ -12,5 +12,6 @@ const authRouter = express_1.default.Router();
 authRouter.post("/signup", (0, validate_middleware_1.default)(auth_validator_1.signupSchema), auth_controller_1.default.signup);
 authRouter.post("/login", (0, validate_middleware_1.default)(auth_validator_1.loginSchema), auth_controller_1.default.login);
 authRouter.post("/logout", auth_middleware_1.authMiddleware, auth_controller_1.default.logout);
+authRouter.get("/me", auth_middleware_1.authMiddleware, auth_controller_1.default.me);
 exports.default = authRouter;
 //# sourceMappingURL=auth.routes.js.map
