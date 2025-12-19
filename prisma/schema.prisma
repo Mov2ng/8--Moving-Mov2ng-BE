@@ -3,6 +3,12 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+// 기본 위치에도 생성 (seed/reset용)
+generator client_default {
+  provider = "prisma-client-js"
+  previewFeatures = []
+}
+
 datasource db {
   provider = "postgresql"
 }
