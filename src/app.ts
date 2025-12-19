@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import "./services/discordBot";
 import authRouter from "./modules/auth/auth.routes";
 import moverRouter from "./modules/movers/mover.routes";
+import requestUserRouter from "./modules/request/user/request.user.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
 
@@ -13,11 +14,12 @@ app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
 // CORS 설정 (개발용 전체 오리진 허용 + 쿠키 전달)
-app.use(cors({ origin: true, credentials: true })); 
+app.use(cors({ origin: true, credentials: true }));
 
 // 라우트
 app.use("/auth", authRouter);
 app.use("/movers", moverRouter);
+app.use("/request/user", requestUserRouter);
 
 setupSwagger(app);
 
