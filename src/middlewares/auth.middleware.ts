@@ -12,7 +12,7 @@ import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
  * - 비로그인 사용자도 접근 가능한 API에서 사용
  */
 export async function optionalAuthMiddleware(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -31,7 +31,7 @@ export async function optionalAuthMiddleware(
     if (typeof decoded === "object" && decoded !== null && "id" in decoded) {
       const user = await prisma.user.findUnique({ where: { id: decoded.id } });
       if (user) {
-        req.user = { id: user.id };
+        req.user = { id: user.id, role: user.role };
       }
     }
   } catch (error) {
