@@ -5,10 +5,10 @@ import { RegionType, Category } from "../../generated/prisma";
  * 정렬 기준
  */
 export const MoverSortSchema = z.enum([
-  'review',   // 리뷰 많은순
-  'rating',   // 평점 높은순
-  'career',   // 경력 높은순
-  'confirm',  // 확정 많은순
+  "review", // 리뷰 많은순
+  "rating", // 평점 높은순
+  "career", // 경력 높은순
+  "confirm", // 확정 많은순
 ]);
 
 export type MoverSortType = z.infer<typeof MoverSortSchema>;
@@ -38,11 +38,10 @@ export const MoverListQuerySchema = z.object({
   /** 무한 스크롤 cursor */
   cursor: z.coerce.number().int().optional(),
   /** 페이지 크기 */
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
 });
 
 export type MoverListQueryDTO = z.infer<typeof MoverListQuerySchema>;
-
 
 /**
  * 기사님 정보 응답(request) 데이터 검증을 위한 Zod 스키마 정의

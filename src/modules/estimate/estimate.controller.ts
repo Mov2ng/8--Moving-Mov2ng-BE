@@ -17,6 +17,17 @@ const postEstimate = asyncWrapper(
   }
 );
 
+const requestEstimate = asyncWrapper(
+  async (req: Request<{ id: string }>, res: Response) => {
+    const { id } = req.params; // 기사님 ID
+    const userId = req.user?.id ?? ""; // 사용자 ID
+
+    const request = await estimateService.requestEstimate(Number(id), userId);
+    return ApiResponse.success(res, request, "기사님 지정 견적 요청 성공");
+  }
+);
+
 export default {
   postEstimate,
+  requestEstimate,
 };

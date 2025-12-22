@@ -101,6 +101,9 @@ export const HTTP_MESSAGE = {
 
   // Estimate
   ESTIMATE_ACTIVE: "현재 활성화된 견적이 있습니다.",
+  ESTIMATE_NOT_FOUND: "현재 활성화된 견적이 없습니다.",
+  ESTIMATE_REQUEST_LIMIT: "기사님 지정 견적 요청 5개 초과입니다.",
+  ESTIMATE_REQUEST_EXISTS: "기사님 지정 견적 요청이 이미 존재합니다.",
 } as const;
 
 /**
@@ -132,4 +135,7 @@ export const HTTP_CODE = {
 
   // Estimate
   ESTIMATE_ACTIVE: "ESTIMATE_ACTIVE",
+  ESTIMATE_NOT_FOUND: "ESTIMATE_NOT_FOUND",
+  ESTIMATE_REQUEST_LIMIT: "ESTIMATE_REQUEST_LIMIT",
+  ESTIMATE_REQUEST_EXISTS: "ESTIMATE_REQUEST_EXISTS",
 } as const;
