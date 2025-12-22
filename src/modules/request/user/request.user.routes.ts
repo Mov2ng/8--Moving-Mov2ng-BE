@@ -11,4 +11,18 @@ requestUserRouter.get(
   requestUserController.getReceivedQuotes
 );
 
+// 대기중인 견적 상세 조회
+requestUserRouter.get(
+  "/quotes/pending/:estimateId",
+  authMiddleware,
+  requestUserController.getPendingQuoteDetail
+);
+
+// 견적 확정
+requestUserRouter.post(
+  "/quotes/pending/:estimateId/accept",
+  authMiddleware,
+  requestUserController.acceptQuote
+);
+
 export default requestUserRouter;
