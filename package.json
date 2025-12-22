@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
-    "start": "node --enable-source-maps dist/app.js",
+    "start": "node --enable-source-maps dist/src/app.js",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
