@@ -1,5 +1,5 @@
 import requestUserRepository, {
-  QuoteWithDriver,
+  type QuoteWithDriver,
 } from "./request.user.repository";
 import { EstimateStatus } from "../../../generated/prisma";
 
@@ -15,6 +15,22 @@ async function getReceivedQuotes(
   });
 }
 
+async function getPendingQuoteDetail(
+  userId: string,
+  estimateId: number
+): Promise<QuoteWithDriver | null> {
+  return requestUserRepository.findPendingQuoteDetail({
+    userId,
+    estimateId,
+  });
+}
+
+async function acceptQuote(userId: string, estimateId: number) {
+  return requestUserRepository.acceptQuote({ userId, estimateId });
+}
+
 export default {
   getReceivedQuotes,
+  getPendingQuoteDetail,
+  acceptQuote,
 };
