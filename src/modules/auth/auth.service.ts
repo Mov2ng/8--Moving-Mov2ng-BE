@@ -9,7 +9,7 @@ import {
 } from "../../utils/jwt";
 import authRepository from "./auth.repository";
 import env from "../../config/env";
-import { Role } from "../../generated/prisma";
+import { Role } from "@prisma/client";
 
 async function signup(
   name: string,

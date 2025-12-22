@@ -1,5 +1,5 @@
 import prisma from "../../../config/db";
-import { EstimateStatus, Prisma } from "../../../generated/prisma";
+import { EstimateStatus, Prisma } from "@prisma/client";
 
 export const quoteInclude = {
   request: true,

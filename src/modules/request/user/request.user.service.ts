@@ -1,7 +1,7 @@
 import requestUserRepository, {
   type QuoteWithDriver,
 } from "./request.user.repository";
-import { EstimateStatus } from "../../../generated/prisma";
+import { EstimateStatus } from "@prisma/client";
 
 async function getReceivedQuotes(
   userId: string,

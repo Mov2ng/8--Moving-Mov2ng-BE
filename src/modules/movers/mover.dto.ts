@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { RegionType, Category } from "../../generated/prisma";
+import { RegionType, Category } from "@prisma/client";
 
 /**
  * 정렬 기준

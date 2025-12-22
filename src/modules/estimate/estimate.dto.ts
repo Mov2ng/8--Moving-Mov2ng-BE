@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { Category } from "../../generated/prisma";
+import { Category } from "@prisma/client";
 
 /**
  * 견적 생성 Request DTO
