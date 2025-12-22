@@ -4,7 +4,7 @@ import { asyncWrapper } from "../../../utils/asyncWrapper";
 import requestUserService from "./request.user.service";
 import ApiError from "../../../core/http/ApiError";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../../../constants/http";
-import { EstimateStatus } from "../../../generated/prisma";
+import { EstimateStatus } from "@prisma/client";
 
 import type { QuoteWithDriver } from "./request.user.repository";
 import type { QuoteDetailResponse } from "./request.user.dto";

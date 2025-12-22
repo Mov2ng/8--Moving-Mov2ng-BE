@@ -1,6 +1,6 @@
 import prisma from "../../config/db";
 
-import type { Prisma } from "../../generated/prisma";
+import type { Prisma } from "@prisma/client";
 
 interface GetMoversParams {
   where: Prisma.DriverWhereInput;

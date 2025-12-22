@@ -1,4 +1,4 @@
-import { Prisma } from "../../generated/prisma";
+import { Prisma } from "@prisma/client";
 import moverRepository from "./mover.repository";
 
 import type { MoverListQueryDTO, MoverSortType } from "./mover.dto";

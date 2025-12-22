@@ -1,5 +1,5 @@
 import prisma from "../../config/db";
-import { Role } from "../../generated/prisma";
+import { Role } from "@prisma/client";
 
 /**
  * 사용자 정보 생성

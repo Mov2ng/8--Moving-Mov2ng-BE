@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ApiError from "../core/http/ApiError";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
-import { Role } from "../generated/prisma";
+import { Role } from "@prisma/client";
 import { verifyToken } from "../utils/jwt";
 
 /**
