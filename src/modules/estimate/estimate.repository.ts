@@ -36,7 +36,40 @@ function getActiveEstimate(userId: string) {
   });
 }
 
+/**
+ * 기사님 지정 견적 요청 생성
+ * @param driverId 기사님 ID
+ * @param requestId 견적 요청 ID
+ * @returns 견적 요청 정보
+ */
+function postRequestEstimate(driverId: number, requestId: number) {
+  return prisma.estimate.create({
+    data: {
+      driver_id: driverId,
+      request_id: requestId,
+      status: "PENDING",
+      price: 0, // 임시 0원 설정
+      isRequest: true,
+    },
+  });
+}
+
+/**
+ * 기사님 지정 견적 요청 조회
+ * @param requestId 견적 요청 ID
+ * @returns 견적 요청 정보
+ */
+function getSpecificEstimate(requestId: number) {
+  return prisma.estimate.findMany({
+    where: {
+      request_id: requestId,
+    },
+  });
+}
+
 export default {
   postEstimate,
   getActiveEstimate,
+  postRequestEstimate,
+  getSpecificEstimate,
 };

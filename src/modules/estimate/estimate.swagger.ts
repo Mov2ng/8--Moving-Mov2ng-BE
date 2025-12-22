@@ -142,8 +142,178 @@
 
 /**
  * @swagger
+ * /estimate/{id}/request:
+ *   post:
+ *     summary: 기사님 지정 견적 요청
+ *     tags: [Estimate]
+ *     description: |
+ *       특정 기사님에게 견적을 요청합니다.
+ *       - 로그인이 필요합니다.
+ *       - 활성화된 견적 요청이 있어야 합니다.
+ *       - 동일한 기사님에게 중복 요청할 수 없습니다.
+ *       - 최대 5명의 기사님에게만 요청할 수 있습니다.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: 기사님 ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: 기사님 지정 견적 요청 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 기사님 지정 견적 요청 성공
+ *                 data:
+ *                   $ref: '#/components/schemas/Estimate'
+ *       400:
+ *         description: 잘못된 요청 (기사님 ID 누락)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 요청 형식이 올바르지 않습니다.
+ *                 code:
+ *                   type: string
+ *                   example: BAD_REQUEST
+ *       401:
+ *         description: 인증 실패
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 로그인이 필요한 서비스입니다.
+ *                 code:
+ *                   type: string
+ *                   example: AUTH_REQUIRED
+ *       404:
+ *         description: 활성화된 견적 요청 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 현재 활성화된 견적이 없습니다.
+ *                 code:
+ *                   type: string
+ *                   example: ESTIMATE_NOT_FOUND
+ *       409:
+ *         description: 충돌 (5개 초과 또는 중복 요청)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: 기사님 지정 견적 요청 5개 초과입니다.
+ *                     code:
+ *                       type: string
+ *                       example: ESTIMATE_REQUEST_LIMIT
+ *                 - type: object
+ *                   properties:
+ *                     success:
+ *                       type: boolean
+ *                       example: false
+ *                     message:
+ *                       type: string
+ *                       example: 기사님 지정 견적 요청이 이미 존재합니다.
+ *                     code:
+ *                       type: string
+ *                       example: ESTIMATE_REQUEST_EXISTS
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 서버 내부 오류가 발생했습니다.
+ *                 code:
+ *                   type: string
+ *                   example: INTERNAL_ERROR
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
+ *     Estimate:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 견적 ID
+ *           example: 1
+ *         driver_id:
+ *           type: integer
+ *           description: 기사님 ID
+ *           example: 5
+ *         request_id:
+ *           type: integer
+ *           description: 견적 요청 ID
+ *           example: 10
+ *         status:
+ *           type: string
+ *           enum: [PENDING, ACCEPTED, REJECTED]
+ *           description: 견적 상태
+ *           example: PENDING
+ *         price:
+ *           type: integer
+ *           description: 견적 가격
+ *           example: 0
+ *         isRequest:
+ *           type: boolean
+ *           description: 지정 견적 여부
+ *           example: true
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: 생성일시
+ *           example: "2025-12-22T10:30:00.000Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: 수정일시
+ *           example: "2025-12-22T10:30:00.000Z"
  *     EstimateRequest:
  *       type: object
  *       properties:
