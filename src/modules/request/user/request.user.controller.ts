@@ -60,7 +60,12 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
 
 const getReceivedQuotes = asyncWrapper(
   async (
-    req: Request<{}, {}, {}, { requestId?: string; status?: string }>,
+    req: Request<
+      {},
+      {},
+      {},
+      { requestId?: string; status?: string; completedOnly?: string }
+    >,
     res: Response
   ) => {
     const userId = req.user?.id;
@@ -101,10 +106,15 @@ const getReceivedQuotes = asyncWrapper(
       }
     })();
 
+    const completedOnlyParam = req.query.completedOnly;
+    const completedOnly =
+      completedOnlyParam === "true" || completedOnlyParam === "1";
+
     const quotes = await requestUserService.getReceivedQuotes(
       userId,
       requestId,
-      status
+      status,
+      completedOnly
     );
 
     // 평균 별점, 리뷰/좋아요 수, 확정건수

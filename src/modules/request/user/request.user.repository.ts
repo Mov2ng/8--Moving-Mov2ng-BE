@@ -43,6 +43,7 @@ interface FindReceivedQuotesParams {
   userId: string;
   requestId?: number;
   status?: EstimateStatus;
+  completedOnly?: boolean;
 }
 
 interface FindPendingQuoteDetailParams {
@@ -67,16 +68,26 @@ async function findReceivedQuotes({
   userId,
   requestId,
   status,
+  completedOnly,
 }: FindReceivedQuotesParams) {
   const requestFilter = requestId
     ? { user_id: userId, id: requestId }
     : { user_id: userId };
 
   const statusFilter = status ? { status } : {};
+  const completedFilter =
+    completedOnly === true
+      ? {
+          request: {
+            ...requestFilter,
+            moving_data: { lt: new Date() },
+          },
+        }
+      : { request: requestFilter };
 
   return prisma.estimate.findMany({
     where: {
-      request: requestFilter,
+      ...completedFilter,
       ...statusFilter,
     },
     orderBy: { createdAt: "desc" },

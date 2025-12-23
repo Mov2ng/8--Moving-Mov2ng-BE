@@ -6,12 +6,14 @@ import { EstimateStatus } from "@prisma/client";
 async function getReceivedQuotes(
   userId: string,
   requestId?: number,
-  status?: EstimateStatus
+  status?: EstimateStatus,
+  completedOnly?: boolean
 ): Promise<QuoteWithDriver[]> {
   return requestUserRepository.findReceivedQuotes({
     userId,
     requestId,
     status,
+    completedOnly,
   });
 }
 
