@@ -189,8 +189,40 @@ const acceptQuote = asyncWrapper(
   }
 );
 
+const getQuoteDetail = asyncWrapper(
+  async (req: Request<{ estimateId: string }>, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(
+        HTTP_STATUS.AUTH_REQUIRED,
+        HTTP_MESSAGE.AUTH_REQUIRED,
+        HTTP_CODE.AUTH_REQUIRED
+      );
+    }
+
+    const estimateId = parseEstimateId(req.params.estimateId);
+
+    const quote = await requestUserService.getQuoteDetail(userId, estimateId);
+    if (!quote) {
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        "견적을 찾을 수 없습니다.",
+        HTTP_CODE.NOT_FOUND
+      );
+    }
+
+    return ApiResponse.success(
+      res,
+      enrichQuote(quote),
+      "견적 상세 조회에 성공했습니다.",
+      HTTP_STATUS.OK
+    );
+  }
+);
+
 export default {
   getReceivedQuotes,
   getPendingQuoteDetail,
   acceptQuote,
+  getQuoteDetail,
 };

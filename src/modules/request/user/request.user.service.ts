@@ -29,8 +29,13 @@ async function acceptQuote(userId: string, estimateId: number) {
   return requestUserRepository.acceptQuote({ userId, estimateId });
 }
 
+async function getQuoteDetail(userId: string, estimateId: number) {
+  return requestUserRepository.findQuoteDetail({ userId, estimateId });
+}
+
 export default {
   getReceivedQuotes,
   getPendingQuoteDetail,
   acceptQuote,
+  getQuoteDetail,
 };

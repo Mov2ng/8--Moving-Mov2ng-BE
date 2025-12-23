@@ -55,6 +55,11 @@ interface AcceptQuoteParams {
   estimateId: number;
 }
 
+interface FindQuoteDetailParams {
+  userId: string;
+  estimateId: number;
+}
+
 /**
  * 특정 사용자가 등록한 요청에 대해 받은 견적 목록 조회
  */
@@ -117,8 +122,19 @@ async function acceptQuote({ userId, estimateId }: AcceptQuoteParams) {
   });
 }
 
+async function findQuoteDetail({ userId, estimateId }: FindQuoteDetailParams) {
+  return prisma.estimate.findFirst({
+    where: {
+      id: estimateId,
+      request: { user_id: userId },
+    },
+    include: quoteInclude,
+  });
+}
+
 export default {
   findReceivedQuotes,
   findPendingQuoteDetail,
   acceptQuote,
+  findQuoteDetail,
 };
