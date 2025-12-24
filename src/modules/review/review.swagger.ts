@@ -16,6 +16,11 @@
  *         schema:
  *           type: string
  *         description: 특정 사용자(작성자) 리뷰만 조회
+ *       - in: query
+ *         name: onlyMyQuotes
+ *         schema:
+ *           type: boolean
+ *         description: true일 때 내가 받은 견적의 기사 리뷰만 조회 (인증 필요)
  *     responses:
  *       200:
  *         description: 리뷰 조회 성공
@@ -55,6 +60,31 @@
  *                 message:
  *                   type: string
  *                   example: 작성 가능한 리뷰 조회에 성공했습니다.
+ *                 data:
+ *                   type: object
+ *                   example: []
+ *
+ * /review/my:
+ *   get:
+ *     summary: 내가 작성한 리뷰 조회
+ *     tags:
+ *       - Review
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 내가 작성한 리뷰 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 내가 작성한 리뷰 조회에 성공했습니다.
  *                 data:
  *                   type: object
  *                   example: []

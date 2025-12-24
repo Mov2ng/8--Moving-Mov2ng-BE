@@ -8,11 +8,18 @@ import { HTTP_CODE, HTTP_MESSAGE } from "../../constants/http";
 
 const list = asyncWrapper(
   async (
-    req: Request<{}, {}, {}, { driverId?: string; userId?: string }>,
+    req: Request<
+      {},
+      {},
+      {},
+      { driverId?: string; userId?: string; onlyMyQuotes?: string }
+    >,
     res: Response
   ) => {
     const driverIdParam = req.query.driverId;
     const userId = req.query.userId;
+    const onlyMyQuotes =
+      req.query.onlyMyQuotes === "true" || req.query.onlyMyQuotes === "1";
 
     let driverId: number | undefined;
     if (driverIdParam !== undefined) {
@@ -27,7 +34,11 @@ const list = asyncWrapper(
       }
     }
 
-    const reviews = await reviewService.getReviews(driverId, userId);
+    const reviews = await reviewService.getReviews(
+      driverId,
+      userId,
+      onlyMyQuotes ? req.user?.id : undefined
+    );
     return ApiResponse.success(
       res,
       reviews,
@@ -56,7 +67,27 @@ const listWritable = asyncWrapper(async (req: Request, res: Response) => {
   );
 });
 
+const listMine = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new ApiError(
+      HTTP_STATUS.AUTH_REQUIRED,
+      HTTP_MESSAGE.AUTH_REQUIRED,
+      HTTP_CODE.AUTH_REQUIRED
+    );
+  }
+
+  const reviews = await reviewService.getReviews(undefined, userId);
+  return ApiResponse.success(
+    res,
+    reviews,
+    "내가 작성한 리뷰 조회에 성공했습니다.",
+    HTTP_STATUS.OK
+  );
+});
+
 export default {
   list,
   listWritable,
+  listMine,
 };

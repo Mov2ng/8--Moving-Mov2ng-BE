@@ -7,6 +7,7 @@ import driverRequestRouter from "./modules/request/driver/request.driver.routes"
 import authRouter from "./modules/auth/auth.routes";
 import moverRouter from "./modules/movers/mover.routes";
 import requestUserRouter from "./modules/request/user/request.user.routes";
+import reviewRouter from "./modules/review/review.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
@@ -29,6 +30,7 @@ app.use("/auth", authRouter);
 app.use("/estimate", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
+app.use("/review", reviewRouter);
 
 app.use("/api", driverRequestRouter);
 

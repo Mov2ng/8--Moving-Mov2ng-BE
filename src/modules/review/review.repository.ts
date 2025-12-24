@@ -4,17 +4,31 @@ import { EstimateStatus } from "@prisma/client";
 interface FindReviewsParams {
   driverId?: number;
   userId?: string;
+  userIdForQuotes?: string; // 내가 받은 견적의 기사만 조회할 때 사용
 }
 
 interface FindWritableReviewsParams {
   userId: string;
 }
 
-async function findReviews({ driverId, userId }: FindReviewsParams) {
+async function findReviews({
+  driverId,
+  userId,
+  userIdForQuotes,
+}: FindReviewsParams) {
   return prisma.review.findMany({
     where: {
       driver_id: driverId,
       user_id: userId,
+      driver: userIdForQuotes
+        ? {
+            estimates: {
+              some: {
+                request: { user_id: userIdForQuotes },
+              },
+            },
+          }
+        : undefined,
     },
     orderBy: { createdAt: "desc" },
     include: {
@@ -22,6 +36,27 @@ async function findReviews({ driverId, userId }: FindReviewsParams) {
         include: {
           user: {
             select: { id: true, name: true, email: true, phone_number: true },
+          },
+          estimates: {
+            where: {
+              status: EstimateStatus.ACCEPTED,
+              request:
+                userId !== undefined
+                  ? { user_id: userId }
+                  : userIdForQuotes !== undefined
+                  ? { user_id: userIdForQuotes }
+                  : undefined,
+            },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: {
+              id: true,
+              price: true,
+              status: true,
+              request: {
+                select: { id: true, moving_type: true, moving_data: true },
+              },
+            },
           },
         },
       },
