@@ -43,6 +43,7 @@ interface FindReceivedQuotesParams {
   userId: string;
   requestId?: number;
   status?: EstimateStatus;
+  completedOnly?: boolean;
 }
 
 interface FindPendingQuoteDetailParams {
@@ -55,6 +56,11 @@ interface AcceptQuoteParams {
   estimateId: number;
 }
 
+interface FindQuoteDetailParams {
+  userId: string;
+  estimateId: number;
+}
+
 /**
  * 특정 사용자가 등록한 요청에 대해 받은 견적 목록 조회
  */
@@ -62,16 +68,26 @@ async function findReceivedQuotes({
   userId,
   requestId,
   status,
+  completedOnly,
 }: FindReceivedQuotesParams) {
   const requestFilter = requestId
     ? { user_id: userId, id: requestId }
     : { user_id: userId };
 
   const statusFilter = status ? { status } : {};
+  const completedFilter =
+    completedOnly === true
+      ? {
+          request: {
+            ...requestFilter,
+            moving_data: { lt: new Date() },
+          },
+        }
+      : { request: requestFilter };
 
   return prisma.estimate.findMany({
     where: {
-      request: requestFilter,
+      ...completedFilter,
       ...statusFilter,
     },
     orderBy: { createdAt: "desc" },
@@ -117,8 +133,19 @@ async function acceptQuote({ userId, estimateId }: AcceptQuoteParams) {
   });
 }
 
+async function findQuoteDetail({ userId, estimateId }: FindQuoteDetailParams) {
+  return prisma.estimate.findFirst({
+    where: {
+      id: estimateId,
+      request: { user_id: userId },
+    },
+    include: quoteInclude,
+  });
+}
+
 export default {
   findReceivedQuotes,
   findPendingQuoteDetail,
   acceptQuote,
+  findQuoteDetail,
 };
