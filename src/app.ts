@@ -12,6 +12,7 @@ import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
+import userRouter from "./modules/user/user.routes";
 
 const app = express();
 app.use(express.json());
@@ -26,18 +27,17 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
+app.use("/user", userRouter);
 app.use("/estimate", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
 
 app.use("/api", driverRequestRouter);
 
-app.use(errorMiddleware);
-
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// 공통 에러 핸들러 등록
+// 공통 에러 핸들러
 app.use(errorMiddleware);
 
 const port = env.PORT || 3000;
