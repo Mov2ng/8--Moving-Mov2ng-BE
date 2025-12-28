@@ -1,0 +1,154 @@
+import { Role } from "@prisma/client"; // 외부 라이브러리 / 자동 생성 타입
+import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../../constants/http"; // 전역 상수
+import ApiError from "../../core/http/ApiError"; // API 에러 클래스
+import authRepository from "../auth/auth.repository"; // 다른 도메인의 repository
+import { ProfileRequestDto } from "./user.dto"; // 현재 도메인의 DTO / 타입
+import profileRepository from "./profile.repository"; // 현재 도메인의 repository
+import prisma from "../../config/db"; // 최하위 인프라 (DB 직접 접근)
+
+/**
+ * 사용자 프로필 조회
+ * @param userId 사용자 ID
+ * @returns 사용자 프로필
+ */
+async function getProfile(userId: string) {
+  const user = await profileRepository.findProfileByUserId(prisma, userId);
+  if (!user) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      HTTP_MESSAGE.USER_NOT_FOUND,
+      HTTP_CODE.USER_NOT_FOUND
+    );
+  }
+  const { service, ...rest } = user;
+  // profileImage는 null일 수 있음 - 프론트에서 null 체크 후 정적 이미지 표시
+  return {
+    ...rest,
+    serviceCategories: service.map((s) => s.category),
+  };
+}
+
+/**
+ * 사용자 프로필 생성
+ * @param userId 사용자 ID
+ * @param profile 사용자 프로필
+ * @returns 생성된 사용자 프로필
+ */
+async function createProfile(userId: string, profile: ProfileRequestDto) {
+  const {
+    profileImage,
+    serviceCategories,
+    region,
+    nickname,
+    driverYears,
+    driverIntro,
+    driverContent,
+  } = profile;
+
+  // 프로필 중복 생성 방지: Service, Region, Driver가 이미 있으면 기존 프로필 반환
+  const existingProfile = await profileRepository.findProfileByUserId(
+    prisma,
+    userId
+  );
+  if (!existingProfile) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      HTTP_MESSAGE.USER_NOT_FOUND,
+      HTTP_CODE.USER_NOT_FOUND
+    );
+  }
+
+  // 이미 프로필이 등록되어 있는지 확인
+  const hasExistingProfile =
+    existingProfile.service.length > 0 ||
+    existingProfile.region.length > 0 ||
+    existingProfile.driver.length > 0;
+
+  if (hasExistingProfile) {
+    // TODO: updateProfile 구현 시, 여기서 updateProfile을 호출하도록 변경
+    // 현재는 역할 분리를 위해 에러 반환 (프론트에서 PUT /user/profile 사용하도록 안내)
+    throw new ApiError(
+      HTTP_STATUS.PROFILE_ALREADY_EXISTS,
+      HTTP_MESSAGE.PROFILE_ALREADY_EXISTS,
+      HTTP_CODE.PROFILE_ALREADY_EXISTS
+    );
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    // 1. profileImage 업데이트 (값이 있을 때만)
+    // 요청에 profileImage가 있으면 검증된 URL 저장, 없으면 null 유지
+    // 프론트에서 null 체크 후 정적 이미지 표시
+    if (profileImage !== undefined) {
+      await authRepository.updateUser(tx, userId, {
+        profileImage,
+      });
+    }
+
+    // 2. Service 생성
+    if (serviceCategories && serviceCategories.length > 0) {
+      // validator에서 이미 Category enum으로 검증되었으므로 타입 단언 불필요
+      await profileRepository.createServices(
+        tx,
+        serviceCategories.map((category) => ({
+          user_id: userId,
+          category,
+        }))
+      );
+    }
+
+    // 3. Region 생성
+    if (region && region.length > 0) {
+      // validator에서 이미 RegionType enum으로 검증되었으므로 타입 단언 불필요
+      await profileRepository.createRegions(
+        tx,
+        region.map((regionValue) => ({
+          user_id: userId,
+          region: regionValue,
+        }))
+      );
+    }
+
+    // 4. DRIVER인 경우 Driver 정보 저장: validator에서 nickname 필수 검증 완료
+    if (existingProfile.role === Role.DRIVER) {
+      await profileRepository.createDriver(tx, {
+        user_id: userId,
+        nickname: nickname!, // 값 단언 가능
+        driver_years: driverYears,
+        driver_intro: driverIntro,
+        driver_content: driverContent,
+      });
+    }
+
+    // 생성된 프로필 데이터 반환
+    const createdProfile = await profileRepository.findProfileByUserId(
+      tx,
+      userId
+    );
+    if (!createdProfile) {
+      throw new ApiError(
+        HTTP_STATUS.INTERNAL_ERROR,
+        HTTP_MESSAGE.INTERNAL_ERROR,
+        HTTP_CODE.INTERNAL_ERROR
+      );
+    }
+    const { service, ...rest } = createdProfile;
+    return {
+      ...rest,
+      serviceCategories: service.map((s) => s.category),
+    };
+  });
+}
+
+/**
+ * 사용자 프로필 업데이트
+ * @param userId 사용자 ID
+ * @param profile 사용자 프로필
+ * @returns 업데이트된 사용자 프로필
+ */
+ async function updateProfile(userId: string, profile: ProfileRequestDto) {}
+
+export default {
+  getProfile,
+  createProfile,
+  updateProfile,
+};
