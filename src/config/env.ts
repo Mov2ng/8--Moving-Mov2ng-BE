@@ -25,6 +25,10 @@ const envSchema = z.object({
 
   // JWT 서명용 비밀키 검증
   JWT_SECRET: z.string().min(1),
+
+  // TODO: S3 기본 프로필 이미지 URL
+  // S3 presigned URL 방식 구현 시 사용
+  // 예: S3_DEFAULT_PROFILE_IMAGE_URL: z.string().url().optional(),
 });
 
 // Zod에서 타입 추론
