@@ -10,7 +10,13 @@ import ApiError from "../../core/http/ApiError";
 const signup = asyncWrapper(
   async (req: Request<{}, {}, SignupDto>, res: Response) => {
     const { role, name, email, phoneNum, password } = req.body;
-    const user = await authService.signup(name, email, phoneNum, password, role);
+    const user = await authService.signup(
+      name,
+      email,
+      phoneNum,
+      password,
+      role
+    );
     logger.info(`[${new Date().toISOString()}] 회원가입 성공: ${user.email}`);
     return ApiResponse.success(res, user, "회원가입 성공", HTTP_STATUS.CREATED);
   }
@@ -26,10 +32,17 @@ const login = asyncWrapper(
 );
 
 const logout = asyncWrapper(async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
+  const { refreshToken } = req.cookies;
   await authService.logout(refreshToken);
   logger.info(`[${new Date().toISOString()}] 로그아웃 성공`);
   return ApiResponse.success(res, null, "로그아웃 성공", HTTP_STATUS.OK);
+});
+
+const refresh = asyncWrapper(async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+  // refresh 함수가 쿠키에 refreshToken을 설정하고 accessToken만 반환
+  const tokens = await authService.refresh(refreshToken, res);
+  return ApiResponse.success(res, tokens, "토큰 갱신 성공", HTTP_STATUS.OK);
 });
 
 const me = asyncWrapper(async (req: Request, res: Response) => {
@@ -49,5 +62,7 @@ export default {
   signup,
   login,
   logout,
+  refresh,
   me,
 };
+ 
