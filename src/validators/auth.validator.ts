@@ -50,7 +50,7 @@ export const loginSchema = z.object({
 });
 
 export const refreshSchema = z.object({
-  body: z.object({
+  cookies: z.object({
     refreshToken: z.string().min(1, "리프레시 토큰이 필요합니다"), // 빈 문자열 방지
   }),
 });
