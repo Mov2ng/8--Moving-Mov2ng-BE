@@ -32,14 +32,23 @@ const login = asyncWrapper(
 );
 
 const logout = asyncWrapper(async (req: Request, res: Response) => {
-  const { refreshToken } = req.cookies;
-  await authService.logout(refreshToken);
+  await authService.logout(res);
   logger.info(`[${new Date().toISOString()}] 로그아웃 성공`);
   return ApiResponse.success(res, null, "로그아웃 성공", HTTP_STATUS.OK);
 });
 
 const refresh = asyncWrapper(async (req: Request, res: Response) => {
   const { refreshToken } = req.cookies;
+
+  // validator에서 이미 체크하지만, 방어적 체크
+  if (!refreshToken) {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      "리프레시 토큰이 필요합니다.",
+      HTTP_CODE.BAD_REQUEST
+    );
+  }
+
   // refresh 함수가 쿠키에 refreshToken을 설정하고 accessToken만 반환
   const tokens = await authService.refresh(refreshToken, res);
   return ApiResponse.success(res, tokens, "토큰 갱신 성공", HTTP_STATUS.OK);
@@ -65,4 +74,3 @@ export default {
   refresh,
   me,
 };
- 

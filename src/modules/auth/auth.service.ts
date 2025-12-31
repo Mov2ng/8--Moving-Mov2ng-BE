@@ -150,16 +150,12 @@ async function login(
   return { ...userWithoutPassword, accessToken };
 }
 
-async function logout(refreshToken: string) {
-  // const decoded: JwtPayload = verifyToken(refreshToken);
-  // if (!decoded) {
-  //   throw new ApiError(
-  //     HTTP_STATUS.UNAUTHORIZED,
-  //     "리프레시 토큰이 유효하지 않습니다.",
-  //     HTTP_CODE.UNAUTHORIZED
-  //   );
-  // }
-  // await authRepository.updateUser(decoded.id, { refreshToken: null });
+async function logout(res: Response) {
+  // TODO. 향후 필요시 아래 로직 추가 가능:
+  // - DB에 refreshToken 저장 시: 토큰 검증 후 DB에서 무효화
+  // - Token blacklist 사용 시: 검증 후 블랙리스트에 추가
+  // - 로그아웃한 토큰 추적 필요 시: 검증 후 로그 기록
+  clearRefreshTokenCookie(res);
 }
 
 async function refresh(refreshToken: string, res: Response) {
