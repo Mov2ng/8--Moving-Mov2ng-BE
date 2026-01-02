@@ -16,6 +16,7 @@ function validate<T>(schema: z.ZodType<T>) {
       body: req.body, // JSON body
       query: req.query, // url query string
       params: req.params, // url path params
+      cookies: req.cookies, // HTTP cookies
     });
 
     if (!result.success) {
