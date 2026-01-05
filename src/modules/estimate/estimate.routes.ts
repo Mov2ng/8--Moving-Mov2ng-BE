@@ -16,7 +16,7 @@ estimateRouter.post(
 );
 
 estimateRouter.post(
-  "/:id/request",
+  "/:id/estimate",
   authMiddleware, 
   checkRequest5DriverMiddleware,
   estimateController.requestEstimate
