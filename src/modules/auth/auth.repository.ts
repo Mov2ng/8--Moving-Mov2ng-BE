@@ -1,5 +1,7 @@
 import prisma from "../../config/db";
-import { Role } from "@prisma/client";
+import { Role, Prisma } from "@prisma/client";
+
+type TxClient = Prisma.TransactionClient;
 
 /**
  * 사용자 정보 생성
@@ -13,9 +15,10 @@ async function createUser(
   email: string,
   phoneNum: string,
   hashedPassword: string,
-  role: Role
+  role: Role,
+  tx: TxClient = prisma
 ) {
-  return prisma.user.create({
+  return tx.user.create({
     data: {
       name,
       email,
@@ -31,9 +34,12 @@ async function createUser(
  * @param id 사용자 ID
  * @returns 사용자 정보
  */
-function findUserById(id: string) {
-  return prisma.user.findUnique({
-    where: { id },
+function findUserById(id: string, tx: TxClient = prisma) {
+  return tx.user.findFirst({
+    where: {
+      id,
+      isDelete: false, // 삭제되지 않은 사용자만 조회
+    },
   });
 }
 
@@ -43,11 +49,16 @@ function findUserById(id: string) {
  * @param role 사용자 역할
  * @returns 사용자 정보
  */
-function findUserByEmailAndRole(email: string, role: Role) {
-  return prisma.user.findFirst({
+async function findUserByEmailAndRole(
+  email: string,
+  role: Role,
+  tx: TxClient = prisma
+) {
+  return tx.user.findFirst({
     where: {
       email,
       role,
+      isDelete: false,
     },
   });
 }
@@ -65,9 +76,10 @@ function updateUser(
   name: string,
   email: string,
   phoneNum: string,
-  password: string
+  password: string,
+  tx: TxClient = prisma
 ) {
-  return prisma.user.update({
+  return tx.user.update({
     where: {
       id,
     },

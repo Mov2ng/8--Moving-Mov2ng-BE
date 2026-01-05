@@ -25,6 +25,10 @@ const envSchema = z.object({
 
   // JWT 서명용 비밀키 검증
   JWT_SECRET: z.string().min(1),
+
+  // CORS 허용 도메인 (프로덕션용, 쉼표로 구분된 여러 도메인 가능)
+  // 개발 환경에서는 없어도 됨 (전체 허용)
+  CORS_ORIGIN: z.string().optional(),
 });
 
 // Zod에서 타입 추론

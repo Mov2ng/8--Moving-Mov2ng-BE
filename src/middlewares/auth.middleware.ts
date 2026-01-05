@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import ApiError from "../core/http/ApiError";
 import env from "../config/env";
-import prisma from "../config/db";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
+import authRepository from "../modules/auth/auth.repository";
 
 /**
  * 선택적 인증 미들웨어
@@ -29,7 +29,7 @@ export async function optionalAuthMiddleware(
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
     if (typeof decoded === "object" && decoded !== null && "id" in decoded) {
-      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      const user = await authRepository.findUserById(decoded.id);
       if (user) {
         req.user = { id: user.id, role: user.role };
       }
@@ -86,8 +86,8 @@ export async function authMiddleware(
       );
     }
 
-    // DB에서 사용자 존재여부 확인
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    // DB에서 사용자 존재여부 확인 (삭제되지 않은 사용자만)
+    const user = await authRepository.findUserById(decoded.id);
     if (!user) {
       return next(
         new ApiError(
