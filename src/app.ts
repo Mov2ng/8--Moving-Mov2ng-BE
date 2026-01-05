@@ -27,7 +27,7 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
-app.use("/estimate", estimateRouter);
+app.use("/requests", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
 app.use("/review", reviewRouter);
