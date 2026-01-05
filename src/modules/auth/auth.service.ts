@@ -11,6 +11,8 @@ import authRepository from "./auth.repository";
 import env from "../../config/env";
 import { Role } from "@prisma/client";
 
+const isProduction = env.NODE_ENV === "production";
+
 /**
  * refreshToken 쿠키 설정 유틸 함수
  * - HTTP-only 쿠키로 설정하여 XSS 공격 방지
@@ -22,8 +24,10 @@ import { Role } from "@prisma/client";
 function setRefreshTokenCookie(res: Response, refreshToken: string) {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true, // JS 접근 불가 (XSS 공격 방지)
-    secure: env.NODE_ENV === "production", // HTTPS에서만 전송
-    sameSite: "strict", // CSRF 공격 방지
+    // 운영 환경에서는 secure: true, sameSite: "none"
+    // 개발 환경에서는 secure: false, sameSite: "strict"
+    secure: isProduction, // 운영 환경: HTTPS에서만 전송 (프록시 환경에서는 trust proxy 설정 필요)
+    sameSite: isProduction ? "none" : "strict", //
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
   });
 }
@@ -36,8 +40,8 @@ function setRefreshTokenCookie(res: Response, refreshToken: string) {
 function clearRefreshTokenCookie(res: Response) {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "strict",
   });
 }
 
@@ -48,14 +52,6 @@ async function signup(
   password: string,
   role: string
 ) {
-  if (role !== "USER" && role !== "DRIVER") {
-    throw new ApiError(
-      HTTP_STATUS.BAD_REQUEST,
-      "role은 'USER' 또는 'DRIVER'만 가능합니다.",
-      HTTP_CODE.BAD_REQUEST
-    );
-  }
-
   // role을 Role enum 타입으로 변환 (타입 단언 없이)
   const roleEnum: Role = role === "USER" ? Role.USER : Role.DRIVER;
 
@@ -108,15 +104,6 @@ async function login(
   req: Request,
   role: string
 ) {
-  // role 검증
-  if (role !== "USER" && role !== "DRIVER") {
-    throw new ApiError(
-      HTTP_STATUS.BAD_REQUEST,
-      "role은 'USER' 또는 'DRIVER'만 가능합니다.",
-      HTTP_CODE.BAD_REQUEST
-    );
-  } // 근데 role 검증은 이미 zod schema에서 했는데도 필요함??
-
   // role을 Role enum 타입으로 변환 (타입 단언 없이)
   const roleEnum: Role = role === "USER" ? Role.USER : Role.DRIVER;
 
