@@ -5,6 +5,7 @@ import { asyncWrapper } from "../../utils/asyncWrapper";
 import reviewService from "./review.service";
 import ApiError from "../../core/http/ApiError";
 import { HTTP_CODE, HTTP_MESSAGE } from "../../constants/http";
+import { CreateReviewBody } from "./review.dto";
 
 const list = asyncWrapper(
   async (
@@ -86,8 +87,29 @@ const listMine = asyncWrapper(async (req: Request, res: Response) => {
   );
 });
 
+const create = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new ApiError(
+      HTTP_STATUS.AUTH_REQUIRED,
+      HTTP_MESSAGE.AUTH_REQUIRED,
+      HTTP_CODE.AUTH_REQUIRED
+    );
+  }
+
+  const body = req.body as CreateReviewBody;
+  const created = await reviewService.createReview(userId, body);
+  return ApiResponse.success(
+    res,
+    created,
+    "리뷰 작성에 성공했습니다.",
+    HTTP_STATUS.CREATED
+  );
+});
+
 export default {
   list,
   listWritable,
   listMine,
+  create,
 };

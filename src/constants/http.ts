@@ -104,6 +104,10 @@ export const HTTP_MESSAGE = {
   ESTIMATE_NOT_FOUND: "현재 활성화된 견적이 없습니다.",
   ESTIMATE_REQUEST_LIMIT: "기사님 지정 견적 요청 5개 초과입니다.",
   ESTIMATE_REQUEST_EXISTS: "기사님 지정 견적 요청이 이미 존재합니다.",
+
+  // Review
+  REVIEW_RATING_RANGE: "평점은 1~5 사이여야 합니다.",
+  REVIEW_CONTENT_RANGE: "내용은 10자 이상 1000자 이하여야 합니다.",
 } as const;
 
 /**

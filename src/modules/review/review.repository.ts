@@ -11,6 +11,31 @@ interface FindWritableReviewsParams {
   userId: string;
 }
 
+interface CreateReviewParams {
+  userId: string;
+  driverId: number;
+  rating: number;
+  review_title?: string;
+  review_content?: string;
+}
+
+async function findExistingReview(userId: string, driverId: number) {
+  return prisma.review.findFirst({
+    where: { user_id: userId, driver_id: driverId, isDelete: false },
+  });
+}
+
+async function hasAcceptedEstimatePast(userId: string, driverId: number) {
+  const now = new Date();
+  return prisma.estimate.findFirst({
+    where: {
+      status: EstimateStatus.ACCEPTED,
+      driver_id: driverId,
+      request: { user_id: userId, moving_data: { lt: now } },
+    },
+  });
+}
+
 async function findReviews({
   driverId,
   userId,
@@ -99,7 +124,40 @@ async function findWritableReviews({ userId }: FindWritableReviewsParams) {
   });
 }
 
+async function createReview({
+  userId,
+  driverId,
+  rating,
+  review_content,
+  review_title,
+}: CreateReviewParams) {
+  return prisma.review.create({
+    data: {
+      user_id: userId,
+      driver_id: driverId,
+      rating,
+      review_content,
+      review_title,
+    },
+    include: {
+      driver: {
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, phone_number: true },
+          },
+        },
+      },
+      user: {
+        select: { id: true, name: true, email: true, phone_number: true },
+      },
+    },
+  });
+}
+
 export default {
   findReviews,
   findWritableReviews,
+  findExistingReview,
+  hasAcceptedEstimatePast,
+  createReview,
 };
