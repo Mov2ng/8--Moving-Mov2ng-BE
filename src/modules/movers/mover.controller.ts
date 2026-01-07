@@ -70,10 +70,18 @@ const deleteMoverFavorite = asyncWrapper(
     return ApiResponse.success(res, mover, "기사님 즐겨찾기 삭제 성공");
   }
 );
+
+const getFavoriteDrivers = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const favorites = await moverService.getFavoriteDrivers(userId);
+  return ApiResponse.success(res, favorites, "찜한 기사님 조회 성공");
+});
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
   createMoverFavorite,
   deleteMoverFavorite,
+  getFavoriteDrivers,
 };

@@ -120,7 +120,6 @@ function formatRawQueryDriver(
   };
 }
 
-
 /**
  * 기사님 상세 조회 - 전체 데이터
  * (직접 URL 접근 또는 캐시 없는 경우 사용)
@@ -222,10 +221,46 @@ async function deleteMoverFavorite(driverId: number, userId: string) {
   return moverRepository.deleteMoverFavorite(driverId, userId);
 }
 
+async function getFavoriteDrivers(userId: string) {
+  const favorites = await moverRepository.getFavoriteDriversByUser(userId);
+
+  return favorites
+    .map((fav) => fav.driver)
+    .filter(
+      (driver): driver is NonNullable<typeof driver> =>
+        driver !== null && driver !== undefined
+    )
+    .map((driver) => {
+      const ratings = driver.review.map((r: { rating: number }) => r.rating);
+      const ratingCount = ratings.length;
+      const averageRating =
+        ratingCount > 0
+          ? ratings.reduce((sum: number, r: number) => sum + r, 0) / ratingCount
+          : 0;
+
+      const categories = driver.user.service.map(
+        (s: { category: string }) => s.category
+      );
+
+      return {
+        id: driver.id,
+        nickname: driver.nickname,
+        careerYears: driver.driver_years,
+        rating: Math.round(averageRating * 10) / 10,
+        ratingCount,
+        confirmedCount: driver._count.estimates,
+        favoriteCount: driver._count.favoriteDriver,
+        category: categories[0] ?? null,
+        isFavorite: true,
+      };
+    });
+}
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
   createMoverFavorite,
+  getFavoriteDrivers,
   deleteMoverFavorite,
 };

@@ -37,5 +37,11 @@ moverRouter.delete(
   authMiddleware,
   moverController.deleteMoverFavorite
 );
+// 즐겨찾기한 기사 목록 조회
+moverRouter.get(
+  "/favorites",
+  authMiddleware,
+  moverController.getFavoriteDrivers
+);
 
 export default moverRouter;
