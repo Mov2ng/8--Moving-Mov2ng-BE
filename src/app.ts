@@ -18,6 +18,25 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
+// 요청 시간 측정 미들웨어
+app.use((req, res, next) => {
+  const start = Date.now();
+  const requestId = Math.random().toString(36).substring(7);
+  
+  console.log(`[${requestId}] ⏱️ START ${req.method} ${req.url}`);
+  
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`[${requestId}] ⏱️ END ${req.method} ${req.url} - ${duration}ms (${res.statusCode})`);
+  });
+  
+  // requestId를 다른 레이어에서 사용할 수 있도록 저장
+  res.locals.requestId = requestId;
+  res.locals.startTime = start;
+  
+  next();
+});
+
 // 리버스 프록시(nginx 등) 뒤에서 실행될 때 X-Forwarded-* 헤더를 신뢰해
 // 실제 클라이언트 IP와 HTTPS 여부를 올바르게 인식하도록 설정
 app.set("trust proxy", 1);
