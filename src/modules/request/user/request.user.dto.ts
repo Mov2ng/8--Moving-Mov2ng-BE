@@ -10,6 +10,7 @@ export interface QuoteDetailResponse {
     createdAt: Date;
   };
   driver: {
+    id: number;
     nickname: string;
     driver_years: number | null;
     driver_intro: string | null;

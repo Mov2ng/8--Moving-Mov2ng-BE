@@ -47,6 +47,7 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
       createdAt: quote.request.createdAt,
     },
     driver: {
+      id: quote.driver?.id ?? 0,
       nickname: quote.driver?.nickname ?? "",
       driver_years: quote.driver?.driver_years ?? null,
       driver_intro: quote.driver?.driver_intro ?? null,
