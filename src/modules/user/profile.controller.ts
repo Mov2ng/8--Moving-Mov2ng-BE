@@ -57,7 +57,21 @@ const createProfile = asyncWrapper(
  * @param res 응답
  * @returns 업데이트된 사용자 프로필
  */
-const updateProfile = () => {};
+const updateProfile = asyncWrapper(
+  async (req: Request<{}, {}, ProfileRequestDto>, res: Response) => {
+    const { id: userId } = req.user!; // 미들웨어로 인증돼 타입 단언 가능
+    const profile = await profileService.updateProfile(userId, req.body);
+    logger.info(
+      `[${new Date().toISOString()}] 프로필 업데이트 성공: ${profile.email}`
+    );
+    return ApiResponse.success(
+      res,
+      profile,
+      "프로필 업데이트 성공",
+      HTTP_STATUS.OK
+    );
+  }
+);
 
 export default {
   getProfile,

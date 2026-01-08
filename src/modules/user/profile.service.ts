@@ -20,11 +20,12 @@ async function getProfile(userId: string) {
       HTTP_CODE.USER_NOT_FOUND
     );
   }
-  const { service, ...rest } = user;
+  const { service, region: regionData, ...rest } = user;
   // profileImage는 null일 수 있음 - 프론트에서 null 체크 후 정적 이미지 표시
   return {
     ...rest,
     serviceCategories: service.map((s) => s.category),
+    region: regionData.map((r) => r.region),
   };
 }
 
@@ -133,10 +134,11 @@ async function createProfile(userId: string, profile: ProfileRequestDto) {
         HTTP_CODE.INTERNAL_ERROR
       );
     }
-    const { service, ...rest } = createdProfile;
+    const { service, region: regionData, ...rest } = createdProfile;
     return {
       ...rest,
       serviceCategories: service.map((s) => s.category),
+      region: regionData.map((r) => r.region),
     };
   });
 }
@@ -147,7 +149,147 @@ async function createProfile(userId: string, profile: ProfileRequestDto) {
  * @param profile 사용자 프로필
  * @returns 업데이트된 사용자 프로필
  */
-async function updateProfile(userId: string, profile: ProfileRequestDto) {}
+async function updateProfile(
+  userId: string,
+  profile: ProfileRequestDto
+): Promise<{
+  id: string;
+  email: string;
+  phone_number: string;
+  name: string;
+  profileImage: string | null;
+  role: Role;
+  provider: string;
+  isDelete: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  serviceCategories: string[];
+  region: string[];
+}> {
+  const {
+    fileKey,
+    serviceCategories,
+    region,
+    nickname,
+    driverYears,
+    driverIntro,
+    driverContent,
+  } = profile;
+
+  // 기존 프로필 조회
+  const existingProfile = await profileRepository.findProfileByUserId(userId);
+  if (!existingProfile) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      HTTP_MESSAGE.USER_NOT_FOUND,
+      HTTP_CODE.USER_NOT_FOUND
+    );
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    // 1. profileImage 업데이트 (값이 있을 때만)
+    if (fileKey !== undefined) {
+      await authRepository.updateUser(
+        userId,
+        {
+          profileImage: fileKey, // S3 fileKey를 DB profileImage 필드에 저장
+        },
+        tx
+      );
+    }
+
+    // 2. Service 업데이트 (기존 삭제 후 새로 생성)
+    if (serviceCategories !== undefined) {
+      // 기존 Service 삭제 (soft delete)
+      await profileRepository.updateServicesByUserId(
+        userId,
+        { isDelete: true },
+        tx
+      );
+      // 새 Service 생성
+      if (serviceCategories.length > 0) {
+        await profileRepository.createServices(
+          serviceCategories.map((category) => ({
+            user_id: userId,
+            category,
+          })),
+          tx
+        );
+      }
+    }
+
+    // 3. Region 업데이트 (기존 삭제 후 새로 생성)
+    if (region !== undefined) {
+      // 기존 Region 삭제 (soft delete)
+      await profileRepository.updateRegionsByUserId(
+        userId,
+        { isDelete: true },
+        tx
+      );
+      // 새 Region 생성
+      if (region.length > 0) {
+        await profileRepository.createRegions(
+          region.map((regionValue) => ({
+            user_id: userId,
+            region: regionValue,
+          })),
+          tx
+        );
+      }
+    }
+
+    // 4. DRIVER인 경우 Driver 정보 업데이트
+    if (existingProfile.role === Role.DRIVER) {
+      const existingDriver = await profileRepository.findDriverByUserId(
+        userId,
+        tx
+      );
+      if (existingDriver) {
+        await profileRepository.updateDriverByUserId(
+          { id: existingDriver.id },
+          {
+            nickname: nickname,
+            driver_years: driverYears,
+            driver_intro: driverIntro,
+            driver_content: driverContent,
+          },
+          tx
+        );
+      } else {
+        // Driver가 없으면 생성
+        await profileRepository.createDriver(
+          {
+            user_id: userId,
+            nickname: nickname!,
+            driver_years: driverYears,
+            driver_intro: driverIntro,
+            driver_content: driverContent,
+          },
+          tx
+        );
+      }
+    }
+
+    // 업데이트된 프로필 데이터 반환
+    const updatedProfile = await profileRepository.findProfileByUserId(
+      userId,
+      tx
+    );
+    if (!updatedProfile) {
+      throw new ApiError(
+        HTTP_STATUS.INTERNAL_ERROR,
+        HTTP_MESSAGE.INTERNAL_ERROR,
+        HTTP_CODE.INTERNAL_ERROR
+      );
+    }
+    const { service, region: regionData, ...rest } = updatedProfile;
+    return {
+      ...rest,
+      serviceCategories: service.map((s) => s.category),
+      region: regionData.map((r) => r.region),
+    };
+  });
+}
 
 export default {
   getProfile,
