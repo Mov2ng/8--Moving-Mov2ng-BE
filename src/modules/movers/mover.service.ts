@@ -1,102 +1,123 @@
-import { Prisma } from "@prisma/client";
 import moverRepository from "./mover.repository";
 
 import type { MoverListQueryDTO, MoverSortType } from "./mover.dto";
 
+// Raw Query가 필요한 정렬 타입
+const RAW_QUERY_SORT_TYPES = ["rating", "confirm"] as const;
+type RawQuerySortType = (typeof RAW_QUERY_SORT_TYPES)[number];
+
+function isRawQuerySort(sort?: string): sort is RawQuerySortType {
+  return RAW_QUERY_SORT_TYPES.includes(sort as RawQuerySortType);
+}
+
+/**
+ * 기사님 목록 조회 (통합 함수)
+ * - rating, confirm 정렬: Raw Query 사용 (계산 기반 정렬)
+ * - 그 외 정렬: Prisma ORM 사용
+ */
 async function getMovers(query: MoverListQueryDTO, userId?: string) {
-  // 조회 조건 정리는 service에서 진행 
-  const where: Prisma.DriverWhereInput = {
-    isDelete: false,
-  };
-
-  if (query.keyword) {
-    where.OR = [{ nickname: { contains: query.keyword } }];
+  // Raw Query가 필요한 정렬인지 확인
+  if (isRawQuerySort(query.sort)) {
+    return getMoversWithRawQuery(query, userId, query.sort);
   }
 
-  // Driver → User → Region/Service 관계를 통해 필터링
-  if (query.region || query.service) {
-    where.user = {};
+  // Prisma ORM 사용
+  return getMoversWithPrisma(query, userId);
+}
 
-    if (query.region) {
-      where.user.region = {
-        some: { region: query.region },
-      };
-    }
-
-    if (query.service) {
-      where.user.service = {
-        some: { category: query.service },
-      };
-    }
-  }
-
-  const orderBy = getOrderBy(query.sort);
-
+/**
+ * Prisma ORM을 사용한 기사님 조회
+ */
+async function getMoversWithPrisma(query: MoverListQueryDTO, userId?: string) {
   const drivers = await moverRepository.getMovers({
-    where,
-    orderBy,
+    keyword: query.keyword,
+    region: query.region,
+    service: query.service,
+    sortBy: query.sort,
     take: query.limit ?? 20,
     cursor: query.cursor ?? undefined,
     skip: query.cursor ? 1 : 0,
-    userId, // 즐겨찾기 여부 확인용
+    userId,
   });
 
-  // 데이터 가공: 평균 평점 계산 및 응답 형식 변환
-  return drivers.map((driver) => {
-    const ratings = driver.review.map((r) => r.rating);
-    const averageRating =
-      ratings.length > 0
-        ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
-        : 0;
-
-    return {
-      id: driver.id,
-      nickname: driver.nickname,
-      driverYears: driver.driver_years,
-      driverIntro: driver.driver_intro,
-      driverContent: driver.driver_content,
-      createdAt: driver.createdAt,
-      // 서비스 카테고리 목록
-      serviceCategories: driver.user.service.map((s) => s.category),
-      // 지역 목록
-      regions: driver.user.region.map((r) => r.region),
-      // 평균 평점 (소수점 1자리)
-      rating: Math.round(averageRating * 10) / 10,
-      // 리뷰 개수
-      reviewCount: driver._count.review,
-      // 즐겨찾기 개수
-      favoriteCount: driver._count.favoriteDriver,
-      // 확정 견적 개수
-      confirmCount: driver._count.estimates,
-      // 현재 사용자의 즐겨찾기 여부
-      isFavorite: driver.favoriteDriver
-        ? driver.favoriteDriver.length > 0
-        : false,
-    };
-  });
+  return drivers.map((driver) => formatPrismaDriver(driver));
 }
 
-function getOrderBy(
-  sort?: MoverSortType
-): Prisma.DriverOrderByWithRelationInput {
-  switch (sort) {
-    case "rating":
-      // TODO: 평균 평점 column 추가
-      // 평점 높은순: 리뷰 개수로 대체 (평균 평점 정렬은 raw query 필요)
-      return { review: { _count: "desc" } };
-    case "review":
-      // 리뷰 많은순
-      return { review: { _count: "desc" } };
-    case "career":
-      // 경력 높은순
-      return { driver_years: "desc" };
-    case "confirm":
-      // TODO: 확정 많은순 column 추가
-      // 확정 많은순 (견적 개수 기준)
-      return { estimates: { _count: "desc" } };
-    default:
-      return { createdAt: "desc" };
-  }
+/**
+ * Raw Query를 사용한 기사님 조회 (계산 기반 정렬) - 평균평점, 확정견적갯수
+ */
+async function getMoversWithRawQuery(
+  query: MoverListQueryDTO,
+  userId: string | undefined,
+  sortBy: RawQuerySortType
+) {
+  const drivers = await moverRepository.getMoversByRawQuery({
+    keyword: query.keyword,
+    region: query.region,
+    service: query.service,
+    take: query.limit ?? 20,
+    cursor: query.cursor,
+    userId,
+    sortBy,
+  });
+
+  return drivers.map((driver) => formatRawQueryDriver(driver));
+}
+
+/**
+ * Prisma 결과 포맷팅
+ */
+function formatPrismaDriver(
+  driver: Awaited<ReturnType<typeof moverRepository.getMovers>>[number]
+) {
+  const ratings = driver.review.map((r) => r.rating);
+  const averageRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+      : 0;
+
+  return {
+    id: driver.id,
+    nickname: driver.nickname,
+    driverYears: driver.driver_years,
+    driverIntro: driver.driver_intro,
+    driverContent: driver.driver_content,
+    createdAt: driver.createdAt,
+    serviceCategories: driver.user.service.map((s) => s.category),
+    regions: driver.user.region.map((r) => r.region),
+    rating: Math.round(averageRating * 10) / 10,
+    reviewCount: driver._count.review,
+    favoriteCount: driver._count.favoriteDriver,
+    confirmCount: driver._count.estimates,
+    isFavorite: driver.favoriteDriver
+      ? driver.favoriteDriver.length > 0
+      : false,
+  };
+}
+
+/**
+ * Raw Query 결과 포맷팅
+ */
+function formatRawQueryDriver(
+  driver: Awaited<
+    ReturnType<typeof moverRepository.getMoversByRawQuery>
+  >[number]
+) {
+  return {
+    id: driver.id,
+    nickname: driver.nickname,
+    driverYears: driver.driverYears,
+    driverIntro: driver.driverIntro,
+    driverContent: driver.driverContent,
+    createdAt: driver.createdAt,
+    serviceCategories: driver.serviceCategories,
+    regions: driver.regions,
+    rating: Math.round(driver.ratingAvg * 10) / 10,
+    reviewCount: driver.reviewCount,
+    favoriteCount: driver.favoriteCount,
+    confirmCount: driver.confirmCount,
+    isFavorite: driver.isFavorite,
+  };
 }
 
 /**
@@ -200,10 +221,46 @@ async function deleteMoverFavorite(driverId: number, userId: string) {
   return moverRepository.deleteMoverFavorite(driverId, userId);
 }
 
+async function getFavoriteDrivers(userId: string) {
+  const favorites = await moverRepository.getFavoriteDriversByUser(userId);
+
+  return favorites
+    .map((fav) => fav.driver)
+    .filter(
+      (driver): driver is NonNullable<typeof driver> =>
+        driver !== null && driver !== undefined
+    )
+    .map((driver) => {
+      const ratings = driver.review.map((r: { rating: number }) => r.rating);
+      const ratingCount = ratings.length;
+      const averageRating =
+        ratingCount > 0
+          ? ratings.reduce((sum: number, r: number) => sum + r, 0) / ratingCount
+          : 0;
+
+      const categories = driver.user.service.map(
+        (s: { category: string }) => s.category
+      );
+
+      return {
+        id: driver.id,
+        nickname: driver.nickname,
+        careerYears: driver.driver_years,
+        rating: Math.round(averageRating * 10) / 10,
+        ratingCount,
+        confirmedCount: driver._count.estimates,
+        favoriteCount: driver._count.favoriteDriver,
+        category: categories[0] ?? null,
+        isFavorite: true,
+      };
+    });
+}
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
   createMoverFavorite,
+  getFavoriteDrivers,
   deleteMoverFavorite,
 };

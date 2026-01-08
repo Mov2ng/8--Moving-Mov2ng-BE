@@ -270,8 +270,78 @@
 
 /**
  * @swagger
+ * /movers/favorites:
+ *   get:
+ *     summary: 내가 찜한 기사님 목록 조회
+ *     tags: [Movers]
+ *     description: 로그인한 사용자가 찜한 기사님 리스트를 조회합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 찜한 기사님 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 찜한 기사님 조회 성공
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FavoriteMover'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalError'
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
+ *     FavoriteMover:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 기사님 ID
+ *           example: 1
+ *         nickname:
+ *           type: string
+ *           example: "김코드 기사님"
+ *         careerYears:
+ *           type: integer
+ *           nullable: true
+ *           example: 7
+ *         rating:
+ *           type: number
+ *           format: float
+ *           example: 5.0
+ *         ratingCount:
+ *           type: integer
+ *           example: 178
+ *         confirmedCount:
+ *           type: integer
+ *           description: 확정 건수
+ *           example: 334
+ *         favoriteCount:
+ *           type: integer
+ *           description: 찜(즐겨찾기) 수
+ *           example: 136
+ *         category:
+ *           type: string
+ *           nullable: true
+ *           description: 대표 서비스 카테고리(첫 번째)
+ *           example: "SMALL"
+ *         isFavorite:
+ *           type: boolean
+ *           example: true
  *     MoverListItem:
  *       type: object
  *       properties:

@@ -150,6 +150,9 @@
  *         driver:
  *           type: object
  *           properties:
+ *             id:
+ *               type: integer
+ *               example: 1
  *             nickname:
  *               type: string
  *               example: 친절한기사1
