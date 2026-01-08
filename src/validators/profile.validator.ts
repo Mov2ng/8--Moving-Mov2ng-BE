@@ -29,8 +29,8 @@ const regionTypeEnum = z.enum(
 
 // 기본 프로필 스키마 (공통 필드)
 const baseProfileSchema = z.object({
-  // TODO: S3 세팅 후에는 URL 형식만 허용하도록 수정
-  profileImage: z.string().optional(),
+  // S3 파일 키: /upload/presigned-url에서 받은 fileKey를 전달
+  fileKey: z.string().optional(),
   serviceCategories: z.array(categoryEnum).optional(),
   region: z.array(regionTypeEnum).optional(),
   // DRIVER 전용 필드들 (USER일 때는 optional로 허용하되 validation에서는 무시)
