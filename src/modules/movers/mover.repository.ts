@@ -523,6 +523,38 @@ async function updateMover(id: string, mover: Prisma.DriverUpdateInput) {
   });
 }
 
+async function getFavoriteDriversByUser(userId: string) {
+  return prisma.favoriteDriver.findMany({
+    where: { user_id: userId, isDelete: false },
+    orderBy: { id: "desc" },
+    include: {
+      driver: {
+        include: {
+          user: {
+            select: {
+              service: {
+                where: { isDelete: false },
+                select: { category: true },
+              },
+            },
+          },
+          review: {
+            where: { isDelete: false },
+            select: { rating: true },
+          },
+          _count: {
+            select: {
+              review: true,
+              favoriteDriver: true,
+              estimates: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 // 기존 호환성을 위한 래퍼 함수
 async function getMoversByRating(params: Omit<GetMoversParams, "sortBy">) {
   return getMoversByRawQuery({ ...params, sortBy: "rating" });
@@ -548,4 +580,5 @@ export default {
   getMoverService,
   createMover,
   updateMover,
+  getFavoriteDriversByUser,
 };
