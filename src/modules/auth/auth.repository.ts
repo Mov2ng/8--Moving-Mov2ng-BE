@@ -3,19 +3,20 @@ import { Prisma, Role, User } from "@prisma/client";
 
 /**
  * 사용자 정보 생성
- * @param tx 트랜잭션 클라이언트
  * @param name 사용자 이름
  * @param email 사용자 이메일
  * @param phoneNum 사용자 전화번호
  * @param hashedPassword 이미 해싱된 비밀번호
+ * @param role 사용자 역할
+ * @param tx 트랜잭션 클라이언트
  */
 async function createUser(
-  tx: Prisma.TransactionClient = prisma,
   name: string,
   email: string,
   phoneNum: string,
   hashedPassword: string,
-  role: Role
+  role: Role,
+  tx: Prisma.TransactionClient = prisma
 ) {
   return tx.user.create({
     data: {
@@ -30,14 +31,11 @@ async function createUser(
 
 /**
  * 사용자 ID로 사용자 정보 조회
- * @param tx 트랜잭션 클라이언트
  * @param id 사용자 ID
+ * @param tx 트랜잭션 클라이언트
  * @returns 사용자 정보
  */
-function findUserById(
-  tx: Prisma.TransactionClient = prisma,
-  id: string
-) {
+function findUserById(id: string, tx: Prisma.TransactionClient = prisma) {
   return tx.user.findUnique({
     where: { id },
   });
@@ -45,15 +43,15 @@ function findUserById(
 
 /**
  * 사용자 이메일로 사용자 정보 조회
- * @param tx 트랜잭션 클라이언트
  * @param email 사용자 이메일
  * @param role 사용자 역할
+ * @param tx 트랜잭션 클라이언트
  * @returns 사용자 정보
  */
 function findUserByEmailAndRole(
-  tx: Prisma.TransactionClient = prisma,
   email: string,
-  role: Role
+  role: Role,
+  tx: Prisma.TransactionClient = prisma
 ) {
   return tx.user.findFirst({
     where: {
@@ -65,14 +63,14 @@ function findUserByEmailAndRole(
 
 /**
  * 사용자 정보 업데이트
- * @param tx 트랜잭션 클라이언트
  * @param id 사용자 ID
  * @param data 사용자 정보
+ * @param tx 트랜잭션 클라이언트
  */
 function updateUser(
-  tx: Prisma.TransactionClient = prisma,
   id: string,
-  data: Prisma.UserUpdateInput
+  data: Prisma.UserUpdateInput,
+  tx: Prisma.TransactionClient = prisma
 ): Promise<User> {
   return tx.user.update({
     where: { id },
