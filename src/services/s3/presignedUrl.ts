@@ -11,7 +11,7 @@ import { generateS3FileKey, GenerateS3FileKeyParams } from "./s3FileKey";
 /**
  * 파일 메타데이터로부터 파일키 생성 + 업로드용 presigned URL 생성
  * - 새로운 파일키를 생성하여 업로드용 presigned URL 발급 (대부분의 케이스)
- * @param params - 파일 메타데이터 (ownerType, ownerId, category, originalFileName)
+ * @param params - 파일 메타데이터 (ownerId, category, originalFileName)
  * @param contentType - 파일 MIME 타입 - 예: "image/jpeg"
  * @param expiration - 만료 시간 (초) - 예: 3600 (1시간), 기본값 3600
  * @returns { presignedUrl: string, fileKey: string }

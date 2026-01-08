@@ -4,7 +4,6 @@ import ApiError from "../../core/http/ApiError";
 import { HTTP_CODE, HTTP_STATUS } from "../../constants/http";
 
 export interface GenerateS3FileKeyParams {
-  ownerType: "USER" | "DRIVER";
   ownerId: string;
   category: "PROFILE" | "SAMPLE";
   originalFileName: string;
@@ -16,7 +15,6 @@ export interface GenerateS3FileKeyParams {
  * @returns 파일 키
  */
 export function generateS3FileKey({
-  ownerType,
   ownerId,
   category,
   originalFileName,
@@ -37,5 +35,5 @@ export function generateS3FileKey({
   }
 
   const uuid = randomUUID();
-  return `${ownerType}/${ownerId}/${category}/${year}/${month}/${day}/${uuid}${extension}`;
+  return `${ownerId}/${category}/${year}/${month}/${day}/${uuid}${extension}`;
 }

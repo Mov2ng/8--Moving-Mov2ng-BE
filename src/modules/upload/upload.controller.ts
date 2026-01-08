@@ -15,7 +15,6 @@ import uploadService from "./upload.service";
 const postPresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
   const { fileName, category, contentType } = req.body;
   const userId = req.user!.id;
-  const userRole = req.user!.role;
 
   // fileName 필수 검증
   if (!fileName || typeof fileName !== "string" || fileName.trim() === "") {
@@ -45,7 +44,6 @@ const postPresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
     res,
     await uploadService.postPresignedUrl({
       userId,
-      userRole,
       fileName,
       category: validCategory,
       contentType: contentType || "image/jpeg",
@@ -83,6 +81,8 @@ const getPresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
  */
 const deletePresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
   const { fileKey } = req.query;
+  const userId = req.user!.id;
+
   if (!fileKey || typeof fileKey !== "string") {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
@@ -93,7 +93,7 @@ const deletePresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
 
   return ApiResponse.success(
     res,
-    await uploadService.deletePresignedUrl(fileKey),
+    await uploadService.deletePresignedUrl(fileKey, userId),
     "파일 삭제용 presigned url 생성 성공"
   );
 });
