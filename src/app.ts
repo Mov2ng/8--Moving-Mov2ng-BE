@@ -13,6 +13,7 @@ import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
 import userRouter from "./modules/user/user.routes";
+import uploadRouter from "./modules/upload/upload.routes";
 
 const app = express();
 app.use(express.json());
@@ -31,7 +32,7 @@ app.use("/user", userRouter);
 app.use("/estimate", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
-
+app.use("/upload", uploadRouter);
 app.use("/api", driverRequestRouter);
 
 // Swagger UI 엔드포인트
