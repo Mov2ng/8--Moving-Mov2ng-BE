@@ -10,6 +10,13 @@ function isRawQuerySort(sort?: string): sort is RawQuerySortType {
   return RAW_QUERY_SORT_TYPES.includes(sort as RawQuerySortType);
 }
 
+// 페이지네이션 응답 타입
+interface PaginatedResponse<T> {
+  list: T[];
+  hasNext: boolean;
+  nextCursor: number | null;
+}
+
 /**
  * 기사님 목록 조회 (통합 함수)
  * - rating, confirm 정렬: Raw Query 사용 (계산 기반 정렬)
@@ -28,19 +35,39 @@ async function getMovers(query: MoverListQueryDTO, userId?: string) {
 /**
  * Prisma ORM을 사용한 기사님 조회
  */
-async function getMoversWithPrisma(query: MoverListQueryDTO, userId?: string) {
+async function getMoversWithPrisma(
+  query: MoverListQueryDTO,
+  userId?: string
+): Promise<PaginatedResponse<ReturnType<typeof formatPrismaDriver>>> {
+  const limit = query.limit ?? 20;
+
+  // 1개 더 조회해서 다음 페이지 존재 여부 확인
   const drivers = await moverRepository.getMovers({
     keyword: query.keyword,
     region: query.region,
     service: query.service,
     sortBy: query.sort,
-    take: query.limit ?? 20,
+    take: limit + 1, // 1개 더 조회
     cursor: query.cursor ?? undefined,
     skip: query.cursor ? 1 : 0,
     userId,
   });
 
-  return drivers.map((driver) => formatPrismaDriver(driver));
+  // 다음 페이지 존재 여부 확인
+  const hasNext = drivers.length > limit;
+
+  // 실제 반환할 데이터 (limit 개수만큼)
+  const resultDrivers = hasNext ? drivers.slice(0, limit) : drivers;
+
+  // 다음 커서 (마지막 아이템의 id)
+  const nextCursor =
+  hasNext ? drivers[limit].id : null;
+
+  return {
+    list: resultDrivers.map((driver) => formatPrismaDriver(driver)),
+    hasNext,
+    nextCursor,
+  };
 }
 
 /**
@@ -50,18 +77,36 @@ async function getMoversWithRawQuery(
   query: MoverListQueryDTO,
   userId: string | undefined,
   sortBy: RawQuerySortType
-) {
+): Promise<PaginatedResponse<ReturnType<typeof formatRawQueryDriver>>> {
+  const limit = query.limit ?? 20;
+
+  // 1개 더 조회해서 다음 페이지 존재 여부 확인
   const drivers = await moverRepository.getMoversByRawQuery({
     keyword: query.keyword,
     region: query.region,
     service: query.service,
-    take: query.limit ?? 20,
+    take: limit + 1, // 1개 더 조회
     cursor: query.cursor,
     userId,
     sortBy,
   });
 
-  return drivers.map((driver) => formatRawQueryDriver(driver));
+  // 다음 페이지 존재 여부 확인
+  const hasNext = drivers.length > limit;
+
+  // 실제 반환할 데이터 (limit 개수만큼)
+  const resultDrivers = hasNext ? drivers.slice(0, limit) : drivers;
+
+  // 다음 커서 (마지막 아이템의 id)
+  const nextCursor =
+  hasNext ? drivers[limit].id : null;
+
+
+  return {
+    list: resultDrivers.map((driver) => formatRawQueryDriver(driver)),
+    hasNext,
+    nextCursor,
+  };
 }
 
 /**
