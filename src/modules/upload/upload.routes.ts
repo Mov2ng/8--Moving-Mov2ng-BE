@@ -20,6 +20,14 @@ uploadRouter.get(
   authMiddleware,
   uploadController.getPresignedUrl
 );
-// 일반적으로는 다른 api에서 presigned-url 생성하는 로직을 함께 처리할 수도 있음
+
+// (1) Frontend → Backend (delete presigned url 요청)
+// (2) Backend → delete presigned url 생성 및 반환 (만료 시간 1시간)
+// (3) Frontend → presigned url로 S3에 직접 파일 삭제
+uploadRouter.delete(
+  "/presigned-url",
+  authMiddleware,
+  uploadController.deletePresignedUrl
+);
 
 export default uploadRouter;

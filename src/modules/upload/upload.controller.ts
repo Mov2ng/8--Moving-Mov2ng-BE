@@ -55,27 +55,6 @@ const postPresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
 });
 
 /**
- * 파일 등록
- * @param fileKey - 파일 key
- * @returns { fileKey: string }
- */
-// const registerFile = asyncWrapper(async (req: Request, res: Response) => {
-//   const { fileKey } = req.body;
-//   if (!fileKey) {
-//     throw new ApiError(
-//       HTTP_STATUS.BAD_REQUEST,
-//       "파일 업로드 실패",
-//       HTTP_CODE.BAD_REQUEST
-//     );
-//   }
-//   return ApiResponse.success(
-//     res,
-//     await uploadService.registerFile(fileKey),
-//     "파일 등록 성공"
-//   );
-// });
-
-/**
  * 조회용 presigned url 생성 및 반환
  * @param fileKey - 파일 key
  * @returns { presignedUrl: string }
@@ -97,8 +76,30 @@ const getPresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
   );
 });
 
+/**
+ * 삭제용 presigned url 생성 및 반환
+ * @param fileKey - 파일 key
+ * @returns { presignedUrl: string }
+ */
+const deletePresignedUrl = asyncWrapper(async (req: Request, res: Response) => {
+  const { fileKey } = req.query;
+  if (!fileKey || typeof fileKey !== "string") {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      "파일 삭제 실패",
+      HTTP_CODE.BAD_REQUEST
+    );
+  }
+
+  return ApiResponse.success(
+    res,
+    await uploadService.deletePresignedUrl(fileKey),
+    "파일 삭제용 presigned url 생성 성공"
+  );
+});
+
 export default {
   postPresignedUrl,
-  // registerFile,
   getPresignedUrl,
+  deletePresignedUrl,
 };

@@ -1,5 +1,9 @@
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import { s3Client } from "./s3Client";
 import env from "../../config/env";
 import { generateS3FileKey, GenerateS3FileKeyParams } from "./s3FileKey";
@@ -59,7 +63,32 @@ async function generateViewPresignedUrl(
   return presignedUrl;
 }
 
+/**
+ * 이미 만들어진 fileKey로 삭제용 presigned URL 생성
+ * - DB에서 조회한 파일키로 삭제용 presigned URL 발급
+ * @param fileKey - S3 파일 key - 예: "USER/123/PROFILE/2025/01/07/uuid.jpg"
+ * @param expiration - 만료 시간 (초) - 예: 3600 (1시간)
+ * @returns { presignedUrl: string }
+ */
+async function generateDeletePresignedUrl(
+  fileKey: string,
+  expiration: number
+): Promise<string> {
+  // S3에 파일 삭제용 명령 생성 (이 조건으로 삭제를 허용)
+  const command = new DeleteObjectCommand({
+    Bucket: env.AWS_S3_BUCKET_NAME, // 파일이 저장된 S3 버킷 이름
+    Key: fileKey, // S3 버킷 안에서의 파일 경로
+  });
+
+  // DeleteObjectCommand 기반으로 presigned url 생성
+  const presignedUrl = await getSignedUrl(s3Client, command, {
+    expiresIn: expiration,
+  });
+  return presignedUrl;
+}
+
 export default {
-  generatePresignedUrl, 
-  generateViewPresignedUrl, 
+  generatePresignedUrl,
+  generateViewPresignedUrl,
+  generateDeletePresignedUrl,
 };

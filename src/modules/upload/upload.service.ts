@@ -70,7 +70,23 @@ async function getPresignedUrl(
   return { presignedUrl };
 }
 
+/**
+ * 삭제용 presigned url 생성 및 반환
+ * @param fileKey - S3에 저장된 파일 key
+ * @returns { presignedUrl: string }
+ */
+async function deletePresignedUrl(
+  fileKey: string
+): Promise<{ presignedUrl: string }> {
+  const presignedUrl = await s3PresignedService.generateDeletePresignedUrl(
+    fileKey,
+    3600
+  );
+  return { presignedUrl };
+}
+
 export default {
   postPresignedUrl,
   getPresignedUrl,
+  deletePresignedUrl,
 };
