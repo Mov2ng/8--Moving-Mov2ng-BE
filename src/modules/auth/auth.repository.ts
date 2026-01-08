@@ -70,29 +70,22 @@ async function findUserByEmailAndRole(
 /**
  * 사용자 정보 업데이트
  * @param id 사용자 ID
- * @param data 사용자 정보
+ * @param data 업데이트할 사용자 정보 (부분 업데이트 가능)
  * @param tx 트랜잭션 클라이언트
  */
 function updateUser(
   id: string,
-  name: string,
-  email: string,
-  phoneNum: string,
-  password: string,
+  data: Prisma.UserUpdateInput,
   tx: TxClient = prisma
 ) {
   return tx.user.update({
     where: {
       id,
     },
-    data: {
-      name,
-      email,
-      phone_number: phoneNum,
-      password,
-    },
+    data,
   });
 }
+
 export default {
   createUser,
   findUserById,
