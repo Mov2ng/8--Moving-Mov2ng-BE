@@ -7,7 +7,6 @@ import logger from "../../utils/logger"; // 로깅 유틸리티
 import { ProfileRequestDto } from "./user.dto"; // 현재 도메인의 DTO / 타입
 import profileService from "./profile.service"; // 현재 도메인의 서비스
 
-
 /**
  * 사용자 프로필 조회
  * @param req 요청
@@ -16,14 +15,7 @@ import profileService from "./profile.service"; // 현재 도메인의 서비스
  */
 const getProfile = asyncWrapper(
   async (req: Request<{}, {}, ProfileRequestDto>, res: Response) => {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new ApiError(
-        HTTP_STATUS.AUTH_REQUIRED,
-        HTTP_MESSAGE.AUTH_REQUIRED,
-        HTTP_CODE.AUTH_REQUIRED
-      );
-    }
+    const { id: userId } = req.user!; // 미들웨어로 인증돼 타입 단언 가능
     const profile = await profileService.getProfile(userId);
     logger.info(
       `[${new Date().toISOString()}] 프로필 조회 성공: ${profile.email}`
@@ -45,19 +37,8 @@ const getProfile = asyncWrapper(
  */
 const createProfile = asyncWrapper(
   async (req: Request<{}, {}, ProfileRequestDto>, res: Response) => {
-    const userId = req.user?.id;
-    if (!userId) {
-      throw new ApiError(
-        HTTP_STATUS.AUTH_REQUIRED,
-        HTTP_MESSAGE.AUTH_REQUIRED,
-        HTTP_CODE.AUTH_REQUIRED
-      );
-    }
-    // validator를 통과한 데이터 사용 (res.locals.validated 또는 req.body)
-    // validator를 통과했다면 타입이 보장됨
-    const validatedBody =
-      (res.locals.validated as { body: ProfileRequestDto })?.body || req.body;
-    const profile = await profileService.createProfile(userId, validatedBody);
+    const { id: userId } = req.user!; // 미들웨어로 인증돼 타입 단언 가능
+    const profile = await profileService.createProfile(userId, req.body);
     logger.info(
       `[${new Date().toISOString()}] 프로필 생성 성공: ${profile.email}`
     );
