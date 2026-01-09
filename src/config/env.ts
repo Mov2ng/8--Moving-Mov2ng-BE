@@ -29,6 +29,12 @@ const envSchema = z.object({
   // CORS 허용 도메인 (프로덕션용, 쉼표로 구분된 여러 도메인 가능)
   // 개발 환경에서는 없어도 됨 (전체 허용)
   CORS_ORIGIN: z.string().optional(),
+
+  // AWS 정보 검증
+  AWS_REGION: z.string().min(1),
+  AWS_ACCESS_KEY_ID: z.string().min(1),
+  AWS_SECRET_ACCESS_KEY: z.string().min(1),
+  AWS_S3_BUCKET_NAME: z.string().min(1),
 });
 
 // Zod에서 타입 추론

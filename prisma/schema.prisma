@@ -5,7 +5,7 @@ generator client {
 
 // 기본 위치에도 생성 (seed/reset용)
 generator client_default {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = []
 }
 
@@ -19,6 +19,7 @@ model User {
   password       String
   phone_number   String
   name           String
+  profileImage   String?
   role           Role             @default(USER)
   provider       provider         @default(LOCAL)
   isDelete       Boolean          @default(false)

@@ -353,7 +353,7 @@
  *           type: string
  *           description: 닉네임
  *           example: "홍길동 기사님"
- *         profileImg:
+ *         profileImage:
  *           type: string
  *           description: 프로필 이미지 URL
  *           example: "https://example.com/image.jpg"
@@ -407,7 +407,7 @@
  *           type: string
  *           description: 닉네임
  *           example: "홍길동 기사님"
- *         profileImg:
+ *         profileImage:
  *           type: string
  *           description: 프로필 이미지 URL
  *           example: "https://example.com/image.jpg"
