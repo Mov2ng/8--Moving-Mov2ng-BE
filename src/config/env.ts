@@ -14,10 +14,13 @@ dotenv.config();
 
 // env 타입/기본값 정의용 zod 스키마
 const envSchema = z.object({
-  // 개발/운영/테스트 필수, 기본값 설정
+  // 환경 설정 (로컬/개발서버/운영서버)
+  // local: 로컬 개발 환경 (기본값, HTTP, 같은 origin)
+  // development: 개발 서버 (HTTPS, cross-origin)
+  // production: 운영 서버 (HTTPS, cross-origin)
   NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+    .enum(["local", "development", "production", "test"]) // TODO: test 제거
+    .default("local"),
 
   // 포트번호 숫자 변환, 기본값 설정
   PORT: z.coerce.number().default(SERVER.DEFAULT_PORT),
@@ -31,14 +34,6 @@ const envSchema = z.object({
   // CORS 허용 도메인 (프로덕션용, 쉼표로 구분된 여러 도메인 가능)
   // 개발 환경에서는 없어도 됨 (전체 허용)
   CORS_ORIGIN: z.string().optional(),
-
-  // 로컬 개발 환경 여부 (로컬: true, 배포: false 또는 없음)
-  // 로컬: 프론트 3000포트, 백엔드 8080포트 (HTTP, 다른 포트)
-  // 배포: Vercel + Render (HTTPS, cross-origin)
-  IS_LOCAL: z
-    .string()
-    .optional()
-    .transform((val) => val === "true"),
 
   // AWS 정보 검증
   AWS_REGION: z.string().min(1),

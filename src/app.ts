@@ -28,11 +28,9 @@ app.set("trust proxy", 1);
 // CORS 설정
 const corsOptions = {
   origin:
-    env.NODE_ENV === "production" && env.CORS_ORIGIN
-      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 운영
-      : env.CORS_ORIGIN
-      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 개발 서버(Render)
-      : true, // 로컬
+    env.NODE_ENV === "local"
+      ? true // 로컬: 전체 허용
+      : env.CORS_ORIGIN!.split(",").map((origin) => origin.trim()), // 개발/운영 서버: CORS_ORIGIN 사용 (필수)
   credentials: true, // 쿠키 전달 허용
 };
 app.use(cors(corsOptions));

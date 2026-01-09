@@ -37,8 +37,8 @@ function errorMiddleware(
       details: err.details,
     };
 
-    // 개발 환경일 때만 스택 노출 (보안)
-    if (env.NODE_ENV === "development") {
+    // 로컬/개발 환경일 때만 스택 노출 (보안)
+    if (env.NODE_ENV === "local" || env.NODE_ENV === "development") {
       response.stack = err.stack;
     }
 
