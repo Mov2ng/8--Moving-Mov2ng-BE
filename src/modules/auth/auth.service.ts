@@ -11,10 +11,11 @@ import authRepository from "./auth.repository";
 import { Role } from "@prisma/client";
 import env from "../../config/env";
 import { SERVER } from "../../constants/http";
+import logger from "../../utils/logger";
 
-// CORS_ORIGIN이 있으면 배포 환경, 없으면 로컬 환경
-const isLocal = !env.CORS_ORIGIN;
-// const isLocal = env.NODE_ENV === "local"; // TODO: 향후 사용 가능성 있음
+// NODE_ENV가 'local'인 경우에만 로컬 환경으로 간주 (HTTP, SameSite: Strict)
+// 그 외(production, development)는 모두 배포 환경으로 간주 (HTTPS, SameSite: None)
+const isLocal = env.NODE_ENV === "local";
 
 /**
  * refreshToken 쿠키 설정 유틸 함수
@@ -23,14 +24,33 @@ const isLocal = !env.CORS_ORIGIN;
  * @param res Express Response 객체
  * @param refreshToken 설정할 refreshToken 문자열
  */
-function setRefreshTokenCookie(res: Response, refreshToken: string) {
-  res.cookie("refreshToken", refreshToken, {
+function setRefreshTokenCookie(
+  res: Response,
+  refreshToken: string,
+  req?: Request
+) {
+  const cookieOptions = {
     httpOnly: true, // JS 접근 불가 (XSS 공격 방지)
     secure: !isLocal, // 로컬: HTTP도 쿠키 전송, 배포: HTTPS에서만 쿠키 전송
-    sameSite: isLocal ? "strict" : "none", // 로컬: 같은 프로토콜, 도메인, 포트에서만 쿠키 전송, 배포: 배포 도메인이 달라도 전송 허용
+    sameSite: (isLocal ? "strict" : "none") as "strict" | "none", // 로컬: 같은 프로토콜, 도메인, 포트에서만 쿠키 전송, 배포: 배포 도메인이 달라도 전송 허용
     maxAge: SERVER.COOKIE_MAX_AGE_7_DAYS, // 7일
     path: "/",
-  });
+  };
+
+  // 배포 환경에서 쿠키 설정 상태 로깅
+  if (!isLocal && req) {
+    const protocol = req.protocol;
+    const isSecure = req.secure;
+    logger.debug(
+      `[쿠키 설정] NODE_ENV: ${
+        env.NODE_ENV
+      }, protocol: ${protocol}, secure: ${isSecure}, cookieOptions: ${JSON.stringify(
+        cookieOptions
+      )}`
+    );
+  }
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 }
 
 /**
@@ -132,8 +152,33 @@ async function login(
   const accessToken = generateToken({ id: user.id });
   const newRefreshToken = generateRefreshToken({ id: user.id });
 
+  // 배포 환경에서 쿠키 설정 전 상태 로깅
+  if (!isLocal) {
+    logger.debug(
+      `[로그인] 쿠키 설정 전 - NODE_ENV: ${
+        env.NODE_ENV
+      }, refreshToken 생성됨: ${!!newRefreshToken}`
+    );
+  }
+
   // refreshToken HTTP-only 쿠키에 저장
-  setRefreshTokenCookie(res, newRefreshToken);
+  setRefreshTokenCookie(res, newRefreshToken, req);
+
+  // 배포 환경에서 쿠키 설정 후 확인
+  if (!isLocal) {
+    const setCookieHeaders = res.getHeader("Set-Cookie");
+    const cookieHeaderStr = Array.isArray(setCookieHeaders)
+      ? setCookieHeaders.join("; ")
+      : typeof setCookieHeaders === "string"
+      ? setCookieHeaders
+      : "";
+    logger.debug(
+      `[로그인] 쿠키 설정 후 - Set-Cookie 헤더 존재: ${!!setCookieHeaders}, 내용: ${cookieHeaderStr.substring(
+        0,
+        100
+      )}...`
+    );
+  }
 
   const { password: _, ...userWithoutPassword } = user;
   return { ...userWithoutPassword, accessToken };
