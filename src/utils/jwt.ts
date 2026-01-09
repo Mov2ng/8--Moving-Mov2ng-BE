@@ -34,13 +34,15 @@ export function generateToken(payload: object, options: SignOptions = {}) {
  * @param options - jwt.sign에 전달할 옵션, 기본 옵션과 병합
  * @returns 생성된 JWT 문자열
  */
-export function generateRefreshToken(payload: object, options: SignOptions = {}) {
+export function generateRefreshToken(
+  payload: object,
+  options: SignOptions = {}
+) {
   return jwt.sign(payload, SECRET_KEY, {
-    ...DEFAULT_SIGN_OPTIONS,
+    expiresIn: "7d", // refreshToken은 7일(cookie maxAge) 만료
     ...options,
   });
 }
-
 /**
  * JWT 토큰 검증
  * @param token - 클라이언트에서 받은 JWT 문자열
@@ -58,5 +60,11 @@ export function verifyToken(token: string) {
         HTTP_CODE.AUTH_INVALID_TOKEN
       );
     }
+    // 예상치 못한 에러 타입
+    throw new ApiError(
+      HTTP_STATUS.AUTH_INVALID_TOKEN,
+      "토큰 검증 중 오류가 발생했습니다.",
+      HTTP_CODE.AUTH_INVALID_TOKEN
+    );
   }
 }

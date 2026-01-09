@@ -9,7 +9,8 @@
     "esModuleInterop": true,         // CommonJS 모듈 호환성
     "skipLibCheck": true,            // 외부 라이브러리 타입 검사 무시 → 속도 ↑
     "forceConsistentCasingInFileNames": true,
-    "sourceMap": true                // 디버깅용 소스맵
+    "sourceMap": true,               // 디버깅용 소스맵
+    "typeRoots": ["./src/types", "./node_modules/@types"] // 전역 타입 선언 경로
   },
   "include": ["src/**/*", "prisma/"],           // src 폴더 + prisma 폴더
   "exclude": ["node_modules"]

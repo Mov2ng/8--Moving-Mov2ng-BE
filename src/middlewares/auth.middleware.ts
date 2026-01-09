@@ -1,29 +1,56 @@
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import ApiError from "../core/http/ApiError";
 import env from "../config/env";
-import prisma from "../config/db";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
+import authRepository from "../modules/auth/auth.repository";
 
-// Request 타입 확장 // 이유: Express 기본 Request 객체에는 'user' 속성이 없기 때문에, TS 컴파일 에러를 방지하기 위해 확장합니다.
-// (권장: src/types/express.d.ts 에서 전역으로 선언하면 이 인터페이스는 필요 없어집니다)
-interface AuthRequest extends Request {
-  user?: { id: string };
-}
+/**
+ * 선택적 인증 미들웨어
+ * - 토큰이 있으면 검증 후 req.user 설정
+ * - 토큰이 없어도 요청은 계속 진행 (req.user는 undefined)
+ * - 비로그인 사용자도 접근 가능한 API에서 사용
+ */
+export async function optionalAuthMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  const authHeader = req.headers.authorization;
 
-// JWT Payload 타입 정의 (예상치 못한 에러 방지를 위해)
-interface JwtUserPayload extends JwtPayload {
-  id?: number;
+  // 토큰이 없으면 그냥 통과 (비로그인 상태)
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, env.JWT_SECRET);
+
+    if (typeof decoded === "object" && decoded !== null && "id" in decoded) {
+      const user = await authRepository.findUserById(decoded.id);
+      if (user) {
+        req.user = { id: user.id, role: user.role };
+      }
+    }
+  } catch (error) {
+    // 토큰이 유효하지 않아도 에러 없이 통과 (비로그인 상태로 처리)
+  }
+
+  next();
 }
 
 /**
- * JWT 토큰 검증 및 사용자 인증 미들웨어
+ * JWT 토큰 검증 및 사용자 인증 미들웨어 (필수)
+ * - 토큰이 없거나 유효하지 않으면 에러 반환
+ * - 로그인 필수 API에서 사용
  * @param req Express 요청 객체
  * @param res Express 응답 객체
  * @param next 다음 미들웨어 호출
  */
 export async function authMiddleware(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ) {
@@ -59,8 +86,8 @@ export async function authMiddleware(
       );
     }
 
-    // DB에서 사용자 존재여부 확인
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    // DB에서 사용자 존재여부 확인 (삭제되지 않은 사용자만)
+    const user = await authRepository.findUserById(decoded.id);
     if (!user) {
       return next(
         new ApiError(
@@ -68,11 +95,16 @@ export async function authMiddleware(
           HTTP_MESSAGE.USER_NOT_FOUND,
           HTTP_CODE.USER_NOT_FOUND
         )
-      ); 
+      );
     }
 
+    // TODO: 필요시 추가 검증
+    // - 사용자 상태 체크 (isDelete)
+    // - 계정 활성화 상태
+    // - 토큰 블랙리스트 체크
+
     // req.user에 안전히 ID 할당
-    req.user = { id: user.id };
+    req.user = { id: user.id, role: user.role };
 
     next();
   } catch (error) {
@@ -108,3 +140,5 @@ export async function authMiddleware(
     );
   }
 }
+
+export default authMiddleware;

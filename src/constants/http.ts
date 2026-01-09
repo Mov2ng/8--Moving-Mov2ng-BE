@@ -43,6 +43,7 @@ export const HTTP_STATUS = {
   // User
   USER_EMAIL_EXISTS: 409,
   USER_NOT_FOUND: 404,
+  PROFILE_ALREADY_EXISTS: 409,
 
   // Validation (입력값 오류는 400)
   VALIDATION_REQUIRED_EMAIL: 400,
@@ -93,11 +94,23 @@ export const HTTP_MESSAGE = {
   // User
   USER_EMAIL_EXISTS: "이미 사용 중인 이메일입니다.",
   USER_NOT_FOUND: "해당 사용자를 찾을 수 없습니다.",
+  PROFILE_ALREADY_EXISTS:
+    "이미 프로필이 등록되어 있습니다. 프로필 수정 기능을 사용해주세요.",
 
   // Validation
   VALIDATION_REQUIRED_EMAIL: "이메일은 필수 입력값입니다.",
   VALIDATION_REQUIRED_PASSWORD: "비밀번호는 필수 입력값입니다.",
   VALIDATION_FORMAT_EMAIL: "올바른 이메일 형식이 아닙니다.",
+
+  // Estimate
+  ESTIMATE_ACTIVE: "현재 활성화된 견적이 있습니다.",
+  ESTIMATE_NOT_FOUND: "현재 활성화된 견적이 없습니다.",
+  ESTIMATE_REQUEST_LIMIT: "기사님 지정 견적 요청 5개 초과입니다.",
+  ESTIMATE_REQUEST_EXISTS: "기사님 지정 견적 요청이 이미 존재합니다.",
+
+  // Review
+  REVIEW_RATING_RANGE: "평점은 1~5 사이여야 합니다.",
+  REVIEW_CONTENT_RANGE: "내용은 10자 이상 1000자 이하여야 합니다.",
 } as const;
 
 /**
@@ -121,9 +134,16 @@ export const HTTP_CODE = {
   // User
   USER_EMAIL_EXISTS: "USER_EMAIL_EXISTS",
   USER_NOT_FOUND: "USER_NOT_FOUND",
+  PROFILE_ALREADY_EXISTS: "PROFILE_ALREADY_EXISTS",
 
   // Validation
   VALIDATION_REQUIRED_EMAIL: "VALIDATION_REQUIRED_EMAIL",
   VALIDATION_REQUIRED_PASSWORD: "VALIDATION_REQUIRED_PASSWORD",
   VALIDATION_FORMAT_EMAIL: "VALIDATION_FORMAT_EMAIL",
+
+  // Estimate
+  ESTIMATE_ACTIVE: "ESTIMATE_ACTIVE",
+  ESTIMATE_NOT_FOUND: "ESTIMATE_NOT_FOUND",
+  ESTIMATE_REQUEST_LIMIT: "ESTIMATE_REQUEST_LIMIT",
+  ESTIMATE_REQUEST_EXISTS: "ESTIMATE_REQUEST_EXISTS",
 } as const;
