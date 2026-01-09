@@ -17,6 +17,15 @@ import logger from "../../utils/logger";
 // 그 외(production, development)는 모두 배포 환경으로 간주 (HTTPS, SameSite: None)
 const isLocal = env.NODE_ENV === "local";
 
+// 환경변수 확인 (서버 시작 시 한 번만 로깅)
+if (!isLocal) {
+  logger.info(
+    `[환경변수 확인] NODE_ENV: ${
+      env.NODE_ENV
+    }, isLocal: ${isLocal}, CORS_ORIGIN: ${env.CORS_ORIGIN || "미설정"}`
+  );
+}
+
 /**
  * refreshToken 쿠키 설정 유틸 함수
  * - HTTP-only 쿠키로 설정하여 XSS 공격 방지
@@ -37,19 +46,12 @@ function setRefreshTokenCookie(
     path: "/",
   };
 
-  // 배포 환경에서 쿠키 설정 상태 로깅
+  // 배포 환경에서 쿠키 옵션 확인 (첫 로그인 시 한 번만)
   if (!isLocal && req) {
     const protocol = req.protocol;
     const isSecure = req.secure;
-    const host = req.get("host");
-    const origin = req.get("origin");
-    const referer = req.get("referer");
-    logger.debug(
-      `[쿠키 설정] NODE_ENV: ${
-        env.NODE_ENV
-      }, protocol: ${protocol}, secure: ${isSecure}, host: ${host}, origin: ${origin}, referer: ${referer}, cookieOptions: ${JSON.stringify(
-        cookieOptions
-      )}`
+    logger.info(
+      `[쿠키 설정] NODE_ENV: ${env.NODE_ENV}, protocol: ${protocol}, req.secure: ${isSecure}, cookieOptions: secure=${cookieOptions.secure}, sameSite=${cookieOptions.sameSite}`
     );
   }
 
@@ -155,44 +157,8 @@ async function login(
   const accessToken = generateToken({ id: user.id });
   const newRefreshToken = generateRefreshToken({ id: user.id });
 
-  // 배포 환경에서 쿠키 설정 전 상태 로깅
-  if (!isLocal) {
-    logger.debug(
-      `[로그인] 쿠키 설정 전 - NODE_ENV: ${
-        env.NODE_ENV
-      }, refreshToken 생성됨: ${!!newRefreshToken}`
-    );
-  }
-
   // refreshToken HTTP-only 쿠키에 저장
   setRefreshTokenCookie(res, newRefreshToken, req);
-
-  // 배포 환경에서 쿠키 설정 후 확인
-  if (!isLocal) {
-    const setCookieHeaders = res.getHeader("Set-Cookie");
-    const cookieHeaderStr = Array.isArray(setCookieHeaders)
-      ? setCookieHeaders.join("; ")
-      : typeof setCookieHeaders === "string"
-      ? setCookieHeaders
-      : "";
-    const cookieHeaderFull = Array.isArray(setCookieHeaders)
-      ? setCookieHeaders[0]
-      : cookieHeaderStr;
-    logger.debug(
-      `[로그인] 쿠키 설정 후 - Set-Cookie 헤더 존재: ${!!setCookieHeaders}, 전체 내용: ${cookieHeaderFull}`
-    );
-
-    // domain, path, secure, sameSite 등 속성 확인
-    if (cookieHeaderFull) {
-      const hasSecure = cookieHeaderFull.includes("Secure");
-      const hasSameSite = cookieHeaderFull.includes("SameSite");
-      const hasHttpOnly = cookieHeaderFull.includes("HttpOnly");
-      const hasDomain = cookieHeaderFull.includes("Domain");
-      logger.debug(
-        `[로그인] 쿠키 속성 확인 - Secure: ${hasSecure}, SameSite: ${hasSameSite}, HttpOnly: ${hasHttpOnly}, Domain: ${hasDomain}`
-      );
-    }
-  }
 
   const { password: _, ...userWithoutPassword } = user;
   return { ...userWithoutPassword, accessToken };
