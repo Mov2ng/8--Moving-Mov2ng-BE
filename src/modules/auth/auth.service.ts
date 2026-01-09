@@ -8,27 +8,25 @@ import {
   verifyToken,
 } from "../../utils/jwt";
 import authRepository from "./auth.repository";
-import env from "../../config/env";
 import { Role } from "@prisma/client";
+import env from "../../config/env";
+import { SERVER } from "../../constants/http";
 
-const isProduction = env.NODE_ENV === "production";
+const isLocal = env.IS_LOCAL ?? false;
 
 /**
  * refreshToken 쿠키 설정 유틸 함수
  * - HTTP-only 쿠키로 설정하여 XSS 공격 방지
- * - secure 옵션으로 HTTPS에서만 전송 (프로덕션 환경)
- * - sameSite: strict로 CSRF 공격 방지
+ * - 로컬/배포 환경에 따라 secure, sameSite 옵션 분기
  * @param res Express Response 객체
  * @param refreshToken 설정할 refreshToken 문자열
  */
 function setRefreshTokenCookie(res: Response, refreshToken: string) {
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true, // JS 접근 불가 (XSS 공격 방지)
-    // 운영 환경에서는 secure: true, sameSite: "none"
-    // 개발 환경에서는 secure: false, sameSite: "strict"
-    secure: isProduction, // 운영 환경: HTTPS에서만 전송 (프록시 환경에서는 trust proxy 설정 필요)
-    sameSite: isProduction ? "none" : "strict", //
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7일,
+    secure: !isLocal, // 로컬: HTTP도 쿠키 전송, 배포: HTTPS에서만 쿠키 전송
+    sameSite: isLocal ? "strict" : "none", // 로컬: 같은 프로토콜, 도메인, 포트에서만 쿠키 전송, 배포: 배포 도메인이 달라도 전송 허용
+    maxAge: SERVER.COOKIE_MAX_AGE_7_DAYS, // 7일
     path: "/",
   });
 }
@@ -41,8 +39,8 @@ function setRefreshTokenCookie(res: Response, refreshToken: string) {
 function clearRefreshTokenCookie(res: Response) {
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "strict",
+    secure: !isLocal,
+    sameSite: isLocal ? "strict" : "none",
     path: "/",
   });
 }
