@@ -1,11 +1,13 @@
+import dotenv from "dotenv";
+import z from "zod";
+import { SERVER } from "../constants/http";
+
 /**
  * 환경 변수 로드 및 검증 모듈
  * - dotenc로 .env 로드
  * - zod로 exprected 환경 변수의 타입, 필수 여부 검증
  * 해당 파일 import시 검증된 env 객체 사용 가능
  */
-import dotenv from "dotenv";
-import z from "zod";
 
 // .env 파일 로드
 dotenv.config();
@@ -18,7 +20,7 @@ const envSchema = z.object({
     .default("development"),
 
   // 포트번호 숫자 변환, 기본값 설정
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(SERVER.DEFAULT_PORT),
 
   // DB 연결 URL이 빈 문자열이나 없을 시 에러
   DATABASE_URL: z.string().min(1),
@@ -29,6 +31,14 @@ const envSchema = z.object({
   // CORS 허용 도메인 (프로덕션용, 쉼표로 구분된 여러 도메인 가능)
   // 개발 환경에서는 없어도 됨 (전체 허용)
   CORS_ORIGIN: z.string().optional(),
+
+  // 로컬 개발 환경 여부 (로컬: true, 배포: false 또는 없음)
+  // 로컬: 프론트 3000포트, 백엔드 8080포트 (HTTP, 다른 포트)
+  // 배포: Vercel + Render (HTTPS, cross-origin)
+  IS_LOCAL: z
+    .string()
+    .optional()
+    .transform((val) => val === "true"),
 
   // AWS 정보 검증
   AWS_REGION: z.string().min(1),

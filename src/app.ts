@@ -15,6 +15,7 @@ import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
 import userRouter from "./modules/user/user.routes";
 import uploadRouter from "./modules/upload/upload.routes";
+import { SERVER } from "./constants/http";
 
 const app = express();
 app.use(express.json());
@@ -63,11 +64,10 @@ app.get("/healthz", (_, res) => {
   res.status(200).send("OK");
 });
 
-
 // 공통 에러 핸들러 등록
 app.use(errorMiddleware);
 
-const port = env.PORT || 3000;
+const port = env.PORT || SERVER.DEFAULT_PORT;
 app.listen(port, () => {
   console.log(`Server running on ${port}`);
 });
