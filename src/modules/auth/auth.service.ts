@@ -41,10 +41,13 @@ function setRefreshTokenCookie(
   if (!isLocal && req) {
     const protocol = req.protocol;
     const isSecure = req.secure;
+    const host = req.get("host");
+    const origin = req.get("origin");
+    const referer = req.get("referer");
     logger.debug(
       `[쿠키 설정] NODE_ENV: ${
         env.NODE_ENV
-      }, protocol: ${protocol}, secure: ${isSecure}, cookieOptions: ${JSON.stringify(
+      }, protocol: ${protocol}, secure: ${isSecure}, host: ${host}, origin: ${origin}, referer: ${referer}, cookieOptions: ${JSON.stringify(
         cookieOptions
       )}`
     );
