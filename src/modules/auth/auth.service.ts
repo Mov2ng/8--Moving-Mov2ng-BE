@@ -28,7 +28,8 @@ function setRefreshTokenCookie(res: Response, refreshToken: string) {
     // 개발 환경에서는 secure: false, sameSite: "strict"
     secure: isProduction, // 운영 환경: HTTPS에서만 전송 (프록시 환경에서는 trust proxy 설정 필요)
     sameSite: isProduction ? "none" : "strict", //
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7일
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7일,
+    path: "/",
   });
 }
 
@@ -42,6 +43,7 @@ function clearRefreshTokenCookie(res: Response) {
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? "none" : "strict",
+    path: "/",
   });
 }
 
