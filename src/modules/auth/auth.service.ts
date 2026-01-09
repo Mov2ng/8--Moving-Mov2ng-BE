@@ -172,12 +172,23 @@ async function login(
       : typeof setCookieHeaders === "string"
       ? setCookieHeaders
       : "";
+    const cookieHeaderFull = Array.isArray(setCookieHeaders)
+      ? setCookieHeaders[0]
+      : cookieHeaderStr;
     logger.debug(
-      `[로그인] 쿠키 설정 후 - Set-Cookie 헤더 존재: ${!!setCookieHeaders}, 내용: ${cookieHeaderStr.substring(
-        0,
-        100
-      )}...`
+      `[로그인] 쿠키 설정 후 - Set-Cookie 헤더 존재: ${!!setCookieHeaders}, 전체 내용: ${cookieHeaderFull}`
     );
+
+    // domain, path, secure, sameSite 등 속성 확인
+    if (cookieHeaderFull) {
+      const hasSecure = cookieHeaderFull.includes("Secure");
+      const hasSameSite = cookieHeaderFull.includes("SameSite");
+      const hasHttpOnly = cookieHeaderFull.includes("HttpOnly");
+      const hasDomain = cookieHeaderFull.includes("Domain");
+      logger.debug(
+        `[로그인] 쿠키 속성 확인 - Secure: ${hasSecure}, SameSite: ${hasSameSite}, HttpOnly: ${hasHttpOnly}, Domain: ${hasDomain}`
+      );
+    }
   }
 
   const { password: _, ...userWithoutPassword } = user;
