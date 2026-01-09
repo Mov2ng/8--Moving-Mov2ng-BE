@@ -12,7 +12,7 @@ import { Role } from "@prisma/client";
 import env from "../../config/env";
 import { SERVER } from "../../constants/http";
 
-const isLocal = env.IS_LOCAL ?? false;
+const isLocal = env.NODE_ENV === "local";
 
 /**
  * refreshToken 쿠키 설정 유틸 함수
