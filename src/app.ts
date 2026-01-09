@@ -18,12 +18,13 @@ import uploadRouter from "./modules/upload/upload.routes";
 import { SERVER } from "./constants/http";
 
 const app = express();
-app.use(express.json());
-app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
 // 리버스 프록시(nginx 등) 뒤에서 실행될 때 X-Forwarded-* 헤더를 신뢰해
 // 실제 클라이언트 IP와 HTTPS 여부를 올바르게 인식하도록 설정
 app.set("trust proxy", 1);
+
+app.use(express.json());
+app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
 // CORS 설정
 const corsOptions = {
