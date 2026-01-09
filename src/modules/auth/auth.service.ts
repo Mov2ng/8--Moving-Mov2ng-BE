@@ -12,7 +12,9 @@ import { Role } from "@prisma/client";
 import env from "../../config/env";
 import { SERVER } from "../../constants/http";
 
-const isLocal = env.NODE_ENV === "local";
+// CORS_ORIGIN이 있으면 배포 환경, 없으면 로컬 환경
+const isLocal = !env.CORS_ORIGIN;
+// const isLocal = env.NODE_ENV === "local"; // TODO: 향후 사용 가능성 있음
 
 /**
  * refreshToken 쿠키 설정 유틸 함수
