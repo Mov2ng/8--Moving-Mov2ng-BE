@@ -17,15 +17,6 @@ import logger from "../../utils/logger";
 // 그 외(production, development)는 모두 배포 환경으로 간주 (HTTPS, SameSite: None)
 const isLocal = env.NODE_ENV === "local";
 
-// 환경변수 확인 (서버 시작 시 한 번만 로깅)
-if (!isLocal) {
-  logger.info(
-    `[환경변수 확인] NODE_ENV: ${
-      env.NODE_ENV
-    }, isLocal: ${isLocal}, CORS_ORIGIN: ${env.CORS_ORIGIN || "미설정"}`
-  );
-}
-
 /**
  * refreshToken 쿠키 설정 유틸 함수
  * - HTTP-only 쿠키로 설정하여 XSS 공격 방지
@@ -218,22 +209,9 @@ async function refresh(refreshToken: string, res: Response) {
   return { accessToken: newAccessToken };
 }
 
-async function me(id: string) {
-  const user = await authRepository.findUserById(id);
-  if (!user) {
-    throw new ApiError(
-      HTTP_STATUS.NOT_FOUND,
-      "사용자 정보를 찾을 수 없습니다.",
-      HTTP_CODE.NOT_FOUND
-    );
-  }
-  return user;
-}
-
 export default {
   signup,
   login,
   logout,
   refresh,
-  me,
 };
