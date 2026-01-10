@@ -55,16 +55,16 @@ const refresh = asyncWrapper(async (req: Request, res: Response) => {
 });
 
 const me = asyncWrapper(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  if (!userId) {
+  // authMiddleware에서 이미 user 정보를 조회했으므로 DB 재조회 불필요
+  if (!req.user) {
     throw new ApiError(
       HTTP_STATUS.AUTH_REQUIRED,
       HTTP_MESSAGE.AUTH_REQUIRED,
       HTTP_CODE.AUTH_REQUIRED
     );
   }
-  const user = await authService.me(userId);
-  return ApiResponse.success(res, user, "내 정보 조회 성공", HTTP_STATUS.OK);
+  // req.user에 이미 전체 user 정보가 있음 (password 제외)
+  return ApiResponse.success(res, req.user, "내 정보 조회 성공", HTTP_STATUS.OK);
 });
 
 export default {
