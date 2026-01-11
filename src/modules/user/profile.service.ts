@@ -37,7 +37,7 @@ async function getProfile(userId: string) {
  */
 async function createProfile(userId: string, profile: ProfileRequestDto) {
   const {
-    fileKey,
+    profileImage,
     serviceCategories,
     region,
     nickname,
@@ -74,14 +74,8 @@ async function createProfile(userId: string, profile: ProfileRequestDto) {
 
   return await prisma.$transaction(async (tx) => {
     // 1. profileImage 업데이트 (값이 있을 때만)
-    if (fileKey !== undefined) {
-      await authRepository.updateUser(
-        userId,
-        {
-          profileImage: fileKey, // S3 fileKey를 DB profileImage 필드에 저장
-        },
-        tx
-      );
+    if (profileImage !== undefined) {
+      await authRepository.updateUser(userId, { profileImage }, tx);
     }
 
     // 2. Service 생성
@@ -167,7 +161,7 @@ async function updateProfile(
   region: string[];
 }> {
   const {
-    fileKey,
+    profileImage,
     serviceCategories,
     region,
     nickname,
@@ -188,14 +182,8 @@ async function updateProfile(
 
   return await prisma.$transaction(async (tx) => {
     // 1. profileImage 업데이트 (값이 있을 때만)
-    if (fileKey !== undefined) {
-      await authRepository.updateUser(
-        userId,
-        {
-          profileImage: fileKey, // S3 fileKey를 DB profileImage 필드에 저장
-        },
-        tx
-      );
+    if (profileImage !== undefined) {
+      await authRepository.updateUser(userId, { profileImage }, tx);
     }
 
     // 2. Service 업데이트 (기존 삭제 후 새로 생성)
