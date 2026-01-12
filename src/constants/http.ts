@@ -6,7 +6,6 @@
 export const SERVER = {
   // 포트 번호
   DEFAULT_PORT: 8080, // 백엔드 기본 포트
-  FRONTEND_PORT: 3000, // 프론트엔드 포트 (참고용)
 
   // 쿠키 만료 시간 (밀리초)
   COOKIE_MAX_AGE_7_DAYS: 1000 * 60 * 60 * 24 * 7, // 7일

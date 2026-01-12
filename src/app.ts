@@ -17,6 +17,7 @@ import noticeRouter from "./modules/notice/notice.routes";
 import userRouter from "./modules/user/user.routes";
 import uploadRouter from "./modules/upload/upload.routes";
 import { SERVER } from "./constants/http";
+import { checkCorsOrigin } from "./utils/origin.utils";
 
 const app = express();
 
@@ -27,20 +28,16 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
-// 개발 환경: localhost + 배포 프론트 모두 허용
-// 운영 환경: 배포 프론트만 허용
+// 로컬 환경: localhost의 모든 포트 허용
+// 개발 환경: localhost의 모든 포트 자동 허용 + CORS_ORIGIN에 설정된 origin 추가
+// 운영 환경: CORS_ORIGIN에 설정된 origin만 허용
 const corsOptions = {
   origin:
-    env.NODE_ENV === "development"
-      ? [
-          "http://localhost:3000", // 프론트 로컬 개발용
-          ...(env.CORS_ORIGIN // CORS_ORIGIN이 있으면 추가
-            ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-            : []),
-        ]
-      : env.CORS_ORIGIN // 운영 환경: CORS_ORIGIN 사용
-      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-      : false, // 운영인데 CORS_ORIGIN 없으면 차단
+    env.NODE_ENV === "production"
+      ? env.CORS_ORIGIN // 운영 환경: 배열로 변환
+        ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+        : false // 운영인데 CORS_ORIGIN 없으면 차단
+      : checkCorsOrigin, // 로컬/개발 환경: 함수로 동적 체크
   credentials: true, // 쿠키 / 인증 정보 전달 허용
 };
 
