@@ -19,7 +19,7 @@ function errorMiddleware(
 ): Response {
   // ANCHOR: middleware 함수기 때문에 예외적으로 err라고 선언하나, 필요시 error로 변경
 
-  console.log(err);
+  console.log(err.message);
 
   // 기본 응답 객체 (예기치 않은 에러)
   let response: ApiErrorResponse = {

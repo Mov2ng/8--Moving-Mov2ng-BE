@@ -189,6 +189,20 @@ const driverRequestRepository = {
 
     return { totalItems, estimates };
   },
+  async deleteRequestWithEstimates(requestId: number): Promise<{
+    requestId: number;
+    deletedEstimates: number;
+  }> {
+    const [deletedEstimates, deletedRequest] = await prisma.$transaction([
+      prisma.estimate.deleteMany({ where: { request_id: requestId } }),
+      prisma.request.delete({ where: { id: requestId } }),
+    ]);
+
+    return {
+      requestId: deletedRequest.id,
+      deletedEstimates: deletedEstimates.count,
+    };
+  },
 };
 
 export default driverRequestRepository;

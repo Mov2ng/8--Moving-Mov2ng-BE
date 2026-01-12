@@ -13,6 +13,7 @@ import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
+import noticeRouter from "./modules/notice/notice.routes";
 import userRouter from "./modules/user/user.routes";
 import uploadRouter from "./modules/upload/upload.routes";
 import { SERVER } from "./constants/http";
@@ -39,6 +40,7 @@ const corsOptions = {
       : checkCorsOrigin, // 로컬/개발 환경: 함수로 동적 체크
   credentials: true, // 쿠키 / 인증 정보 전달 허용
 };
+
 app.use(cors(corsOptions));
 
 app.get("/", (_, res) => {
@@ -48,13 +50,11 @@ app.get("/", (_, res) => {
 // 라우트
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
-app.use("/estimate", estimateRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
+app.use("/notice", noticeRouter);
 app.use("/upload", uploadRouter);
 app.use("/requests", estimateRouter);
-app.use("/movers", moverRouter);
-app.use("/request/user", requestUserRouter);
 app.use("/review", reviewRouter);
 
 app.use("/api", driverRequestRouter);

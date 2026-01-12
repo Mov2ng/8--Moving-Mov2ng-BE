@@ -144,8 +144,15 @@
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *     DriverRequestDeleteResponse:
+ *       type: object
+ *       properties:
+ *         requestId:
+ *           type: integer
+ *         deletedEstimates:
+ *           type: integer
  *
- * /api/requests/driver/list:
+ * /requests/driver/list:
  *   get:
  *     summary: 드라이버 견적 요청 리스트
  *     operationId: list
@@ -223,7 +230,7 @@
  *       400:
  *         description: Bad request
  *
- * /api/requests/driver/estimate/rejected:
+ * /requests/driver/estimate/rejected:
  *   get:
  *     summary: 반려된 견적 리스트 (드라이버 본인)
  *     operationId: rejected
@@ -267,7 +274,7 @@
  *       400:
  *         description: Bad request
  *
- * /api/requests/driver/estimate/list:
+ * /requests/driver/estimate/list:
  *   get:
  *     summary: 드라이버 지정 견적 요청 리스트
  *     operationId: list
@@ -337,7 +344,7 @@
  *       400:
  *         description: Bad request
  *
- * /api/requests/driver/estimate/accept:
+ * /requests/driver/estimate/accept:
  *   post:
  *     summary: 드라이버 견적 승인(수락) 생성
  *     operationId: accept
@@ -382,7 +389,7 @@
  *       400:
  *         description: Bad request
  *
- * /api/requests/driver/estimate/reject:
+ * /requests/driver/estimate/reject:
  *   post:
  *     summary: 드라이버 견적 반려 생성
  *     operationId: reject
@@ -416,6 +423,115 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/DriverEstimateActionResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       400:
+ *         description: Bad request
+ *
+ * /requests/driver/estimate/update:
+ *   post:
+ *     summary: Driver estimate decision update
+ *     operationId: updateEstimateDecision
+ *     tags:
+ *       - Driver
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             oneOf:
+ *               - type: object
+ *                 example:
+ *                   userId: "11111111-1111-1111-1111-111111111111"
+ *                   requestId: 900001
+ *                   status: "ACCEPTED"
+ *                   requestReason: "Approved"
+ *                   price: 120000
+ *                 properties:
+ *                   userId:
+ *                     type: string
+ *                   requestId:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                     enum: [ACCEPTED]
+ *                   requestReason:
+ *                     type: string
+ *                   price:
+ *                     type: integer
+ *                 required:
+ *                   - userId
+ *                   - requestId
+ *                   - status
+ *                   - requestReason
+ *                   - price
+ *               - type: object
+ *                 example:
+ *                   userId: "11111111-1111-1111-1111-111111111111"
+ *                   requestId: 900001
+ *                   status: "REJECTED"
+ *                   requestReason: "Rejected"
+ *                 properties:
+ *                   userId:
+ *                     type: string
+ *                   requestId:
+ *                     type: integer
+ *                   status:
+ *                     type: string
+ *                     enum: [REJECTED]
+ *                   requestReason:
+ *                     type: string
+ *                 required:
+ *                   - userId
+ *                   - requestId
+ *                   - status
+ *                   - requestReason
+ *     responses:
+ *       200:
+ *         description: Created estimate info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverEstimateActionResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       400:
+ *         description: Bad request
+ *
+ * /requests/driver/request:
+ *   delete:
+ *     summary: Driver request delete
+ *     operationId: deleteDriverRequest
+ *     tags:
+ *       - Driver
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example:
+ *               userId: "11111111-1111-1111-1111-111111111111"
+ *               requestId: 900001
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               requestId:
+ *                 type: integer
+ *             required:
+ *               - userId
+ *               - requestId
+ *     responses:
+ *       200:
+ *         description: Request delete success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DriverRequestDeleteResponse'
  *       401:
  *         description: Unauthorized
  *       403:
