@@ -12,6 +12,10 @@ import {
   DriverEstimateAcceptPayload,
   DriverEstimateRejectDto,
   DriverEstimateRejectPayload,
+  DriverEstimateUpdateDto,
+  DriverEstimateUpdatePayload,
+  DriverRequestDeleteDto,
+  DriverRequestDeletePayload,
   DriverRequestListDto,
   DriverRequestListPayload,
   DriverRejectedEstimateListDto,
@@ -84,6 +88,38 @@ const rejectEstimate = asyncWrapper(
   }
 );
 
+const updateEstimateDecision = asyncWrapper(
+  async (
+    req: Request<{}, {}, DriverEstimateUpdatePayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { body: DriverEstimateUpdatePayload };
+    const { userId, ...body } = validated.body;
+
+    const data = await driverRequestService.updateEstimateDecision(
+      userId,
+      body as DriverEstimateUpdateDto
+    );
+    return ApiResponse.success(res, data);
+  }
+);
+
+const deleteDriverRequest = asyncWrapper(
+  async (
+    req: Request<{}, {}, DriverRequestDeletePayload>,
+    res: Response
+  ) => {
+    const validated = res.locals.validated as { body: DriverRequestDeletePayload };
+    const { userId, ...body } = validated.body;
+
+    const data = await driverRequestService.deleteDriverRequest(
+      userId,
+      body as DriverRequestDeleteDto
+    );
+    return ApiResponse.success(res, data);
+  }
+);
+
 const getRejectedEstimates = asyncWrapper(
   async (
     req: Request<{}, {}, DriverRejectedEstimateListPayload>,
@@ -107,7 +143,9 @@ const driverRequestController = {
   getDriverDesignatedRequests,
   acceptEstimate,
   rejectEstimate,
+  updateEstimateDecision,
   getRejectedEstimates,
+  deleteDriverRequest,
 };
 
 export default driverRequestController;
