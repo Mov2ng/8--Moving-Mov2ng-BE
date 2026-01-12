@@ -4,3 +4,7 @@ node_modules
 
 dist/
 /src/generated/prisma
+
+# Test coverage reports
+coverage/
+*.lcov

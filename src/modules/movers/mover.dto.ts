@@ -50,11 +50,11 @@ const MoverDtoSchema = z.object({
   id: z.number(),
   nickname: z.string(),
   driverYears: z.number(),
-  driver_intro: z.string(),
+  driverIntro: z.string(),
   favoriteCount: z.number(),
   reviewCount: z.number(),
   estimateCount: z.number(),
-  service_categories: z.array(z.string()),
+  serviceCategories: z.array(z.string()),
 });
 
 export type MoverDTO = z.infer<typeof MoverDtoSchema>;

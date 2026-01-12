@@ -2,6 +2,16 @@
  * HTTP 관련 상수 정의 파일
  */
 
+// 서버 관련 상수
+export const SERVER = {
+  // 포트 번호
+  DEFAULT_PORT: 8080, // 백엔드 기본 포트
+  FRONTEND_PORT: 3000, // 프론트엔드 포트 (참고용)
+
+  // 쿠키 만료 시간 (밀리초)
+  COOKIE_MAX_AGE_7_DAYS: 1000 * 60 * 60 * 24 * 7, // 7일
+} as const;
+
 // 상태 코드
 export const HTTP_STATUS = {
   // 2xx Success
@@ -43,6 +53,7 @@ export const HTTP_STATUS = {
   // User
   USER_EMAIL_EXISTS: 409,
   USER_NOT_FOUND: 404,
+  PROFILE_ALREADY_EXISTS: 409,
 
   // Validation (입력값 오류는 400)
   VALIDATION_REQUIRED_EMAIL: 400,
@@ -93,6 +104,8 @@ export const HTTP_MESSAGE = {
   // User
   USER_EMAIL_EXISTS: "이미 사용 중인 이메일입니다.",
   USER_NOT_FOUND: "해당 사용자를 찾을 수 없습니다.",
+  PROFILE_ALREADY_EXISTS:
+    "이미 프로필이 등록되어 있습니다. 프로필 수정 기능을 사용해주세요.",
 
   // Validation
   VALIDATION_REQUIRED_EMAIL: "이메일은 필수 입력값입니다.",
@@ -104,6 +117,10 @@ export const HTTP_MESSAGE = {
   ESTIMATE_NOT_FOUND: "현재 활성화된 견적이 없습니다.",
   ESTIMATE_REQUEST_LIMIT: "기사님 지정 견적 요청 5개 초과입니다.",
   ESTIMATE_REQUEST_EXISTS: "기사님 지정 견적 요청이 이미 존재합니다.",
+
+  // Review
+  REVIEW_RATING_RANGE: "평점은 1~5 사이여야 합니다.",
+  REVIEW_CONTENT_RANGE: "내용은 10자 이상 1000자 이하여야 합니다.",
 } as const;
 
 /**
@@ -127,6 +144,7 @@ export const HTTP_CODE = {
   // User
   USER_EMAIL_EXISTS: "USER_EMAIL_EXISTS",
   USER_NOT_FOUND: "USER_NOT_FOUND",
+  PROFILE_ALREADY_EXISTS: "PROFILE_ALREADY_EXISTS",
 
   // Validation
   VALIDATION_REQUIRED_EMAIL: "VALIDATION_REQUIRED_EMAIL",

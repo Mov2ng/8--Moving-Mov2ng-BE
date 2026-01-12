@@ -28,7 +28,7 @@ const stackWithMetaFormat = printf((info) => {
 
 // 로거 인스턴스 생성
 const logger = winston.createLogger({
-  // 로그 레벨(production은 info, dev/test는 debug로 상세 로깅) 설정
+  // 로그 레벨(production은 info, local/development는 debug로 상세 로깅) 설정
   level: env.NODE_ENV === "production" ? "info" : "debug",
 
   // timestamp + stack + 주요 메타를 남기는 공통 포맷

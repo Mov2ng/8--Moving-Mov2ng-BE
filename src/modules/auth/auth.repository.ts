@@ -1,5 +1,7 @@
 import prisma from "../../config/db";
-import { Role } from "@prisma/client";
+import { Role, Prisma, User } from "@prisma/client";
+
+type TxClient = Prisma.TransactionClient;
 
 /**
  * 사용자 정보 생성
@@ -7,15 +9,18 @@ import { Role } from "@prisma/client";
  * @param email 사용자 이메일
  * @param phoneNum 사용자 전화번호
  * @param hashedPassword 이미 해싱된 비밀번호
+ * @param role 사용자 역할
+ * @param tx 트랜잭션 클라이언트
  */
 async function createUser(
   name: string,
   email: string,
   phoneNum: string,
   hashedPassword: string,
-  role: Role
+  role: Role,
+  tx: TxClient = prisma
 ) {
-  return prisma.user.create({
+  return tx.user.create({
     data: {
       name,
       email,
@@ -29,11 +34,15 @@ async function createUser(
 /**
  * 사용자 ID로 사용자 정보 조회
  * @param id 사용자 ID
+ * @param tx 트랜잭션 클라이언트
  * @returns 사용자 정보
  */
-function findUserById(id: string) {
-  return prisma.user.findUnique({
-    where: { id },
+function findUserById(id: string, tx: TxClient = prisma) {
+  return tx.user.findFirst({
+    where: {
+      id,
+      isDelete: false, // 삭제되지 않은 사용자만 조회
+    },
   });
 }
 
@@ -41,13 +50,19 @@ function findUserById(id: string) {
  * 사용자 이메일로 사용자 정보 조회
  * @param email 사용자 이메일
  * @param role 사용자 역할
+ * @param tx 트랜잭션 클라이언트
  * @returns 사용자 정보
  */
-function findUserByEmailAndRole(email: string, role: Role) {
-  return prisma.user.findFirst({
+async function findUserByEmailAndRole(
+  email: string,
+  role: Role,
+  tx: TxClient = prisma
+) {
+  return tx.user.findFirst({
     where: {
       email,
       role,
+      isDelete: false,
     },
   });
 }
@@ -55,28 +70,19 @@ function findUserByEmailAndRole(email: string, role: Role) {
 /**
  * 사용자 정보 업데이트
  * @param id 사용자 ID
- * @param name 사용자 이름
- * @param email 사용자 이메일
- * @param phoneNum 사용자 전화번호
- * @param password 사용자 비밀번호
+ * @param data 업데이트할 사용자 정보 (부분 업데이트 가능)
+ * @param tx 트랜잭션 클라이언트
  */
 function updateUser(
   id: string,
-  name: string,
-  email: string,
-  phoneNum: string,
-  password: string
+  data: Prisma.UserUpdateInput,
+  tx: TxClient = prisma
 ) {
-  return prisma.user.update({
+  return tx.user.update({
     where: {
       id,
     },
-    data: {
-      name,
-      email,
-      phone_number: phoneNum,
-      password,
-    },
+    data,
   });
 }
 
