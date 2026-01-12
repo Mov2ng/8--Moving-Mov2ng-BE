@@ -47,6 +47,31 @@ export const driverEstimateRejectDto = z.object({
   }),
 });
 
+export const driverEstimateUpdateDto = z.object({
+  body: z.discriminatedUnion("status", [
+    z.object({
+      userId: z.string().min(1),
+      requestId: z.coerce.number().int(),
+      status: z.literal("ACCEPTED"),
+      requestReason: z.string().min(1),
+      price: z.coerce.number().int().positive(),
+    }),
+    z.object({
+      userId: z.string().min(1),
+      requestId: z.coerce.number().int(),
+      status: z.literal("REJECTED"),
+      requestReason: z.string().min(1),
+    }),
+  ]),
+});
+
+export const driverRequestDeleteDto = z.object({
+  body: z.object({
+    userId: z.string().min(1),
+    requestId: z.coerce.number().int(),
+  }),
+});
+
 export const driverRejectedEstimateListDto = z.object({
   query: z.object({
     userId: z.string().min(1),
@@ -85,9 +110,20 @@ export type DriverEstimateAcceptPayload =
   z.infer<typeof driverEstimateAcceptDto>["body"];
 export type DriverEstimateRejectPayload =
   z.infer<typeof driverEstimateRejectDto>["body"];
+export type DriverEstimateUpdatePayload =
+  z.infer<typeof driverEstimateUpdateDto>["body"];
+export type DriverRequestDeletePayload =
+  z.infer<typeof driverRequestDeleteDto>["body"];
+
+type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
 
 export type DriverEstimateAcceptDto = Omit<DriverEstimateAcceptPayload, "userId">;
 export type DriverEstimateRejectDto = Omit<DriverEstimateRejectPayload, "userId">;
+export type DriverEstimateUpdateDto = DistributiveOmit<
+  DriverEstimateUpdatePayload,
+  "userId"
+>;
+export type DriverRequestDeleteDto = Omit<DriverRequestDeletePayload, "userId">;
 
 export type DriverRejectedEstimateListPayload =
   z.infer<typeof driverRejectedEstimateListDto>["query"];

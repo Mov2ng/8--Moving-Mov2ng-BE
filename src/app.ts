@@ -13,6 +13,7 @@ import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
+import noticeRouter from "./modules/notice/notice.routes";
 import userRouter from "./modules/user/user.routes";
 import uploadRouter from "./modules/upload/upload.routes";
 import { SERVER } from "./constants/http";
@@ -26,16 +27,23 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
-// CORS 설정
+// 개발 환경: localhost + 배포 프론트 모두 허용
+// 운영 환경: 배포 프론트만 허용
 const corsOptions = {
   origin:
-    env.NODE_ENV === "development" || env.NODE_ENV === "production"
-      ? env.CORS_ORIGIN
-        ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 개발/운영 서버: CORS_ORIGIN 사용
-        : true // CORS_ORIGIN이 없으면 전체 허용 (개발 환경 대비)
-      : true, // 로컬: 전체 허용
-  credentials: true, // 쿠키 전달 허용
+    env.NODE_ENV === "development"
+      ? [
+          "http://localhost:3000", // 프론트 로컬 개발용
+          ...(env.CORS_ORIGIN // CORS_ORIGIN이 있으면 추가
+            ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+            : []),
+        ]
+      : env.CORS_ORIGIN // 운영 환경: CORS_ORIGIN 사용
+      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+      : false, // 운영인데 CORS_ORIGIN 없으면 차단
+  credentials: true, // 쿠키 / 인증 정보 전달 허용
 };
+
 app.use(cors(corsOptions));
 
 app.get("/", (_, res) => {
@@ -47,6 +55,7 @@ app.use("/auth", authRouter);
 app.use("/user", userRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
+app.use("/notice", noticeRouter);
 app.use("/upload", uploadRouter);
 app.use("/requests", estimateRouter);
 app.use("/review", reviewRouter);
