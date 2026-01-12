@@ -30,7 +30,9 @@ app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 const corsOptions = {
   origin:
     env.NODE_ENV === "development" || env.NODE_ENV === "production"
-      ? env.CORS_ORIGIN!.split(",").map((origin) => origin.trim()) // 개발/운영 서버: CORS_ORIGIN 사용 (필수)
+      ? env.CORS_ORIGIN
+        ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 개발/운영 서버: CORS_ORIGIN 사용
+        : true // CORS_ORIGIN이 없으면 전체 허용 (개발 환경 대비)
       : true, // 로컬: 전체 허용
   credentials: true, // 쿠키 전달 허용
 };
