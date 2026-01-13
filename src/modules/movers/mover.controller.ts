@@ -45,6 +45,7 @@ const getMoverDetailExtra = asyncWrapper(
   }
 );
 
+// 기사님 즐겨찾기 생성
 const createMoverFavorite = asyncWrapper(
   async (req: Request<{ id: string }>, res: Response) => {
     const driverId = req.params.id;
@@ -58,6 +59,7 @@ const createMoverFavorite = asyncWrapper(
   }
 );
 
+// 기사님 즐겨찾기 삭제
 const deleteMoverFavorite = asyncWrapper(
   async (req: Request<{ id: string }>, res: Response) => {
     const driverId = req.params.id;
@@ -71,6 +73,7 @@ const deleteMoverFavorite = asyncWrapper(
   }
 );
 
+// 즐겨찾기한 기사 목록 조회
 const getFavoriteDrivers = asyncWrapper(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
   const favorites = await moverService.getFavoriteDrivers(userId);
