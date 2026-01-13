@@ -77,10 +77,18 @@ const getFavoriteDrivers = asyncWrapper(async (req: Request, res: Response) => {
   return ApiResponse.success(res, favorites, "찜한 기사님 조회 성공");
 });
 
+// 기사님 본인 정보 조회 (마이페이지용)
+const getMyMoverDetail = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user!.id; // authMiddleware로 인증됨
+  const mover = await moverService.getMyMoverDetail(userId); 
+  return ApiResponse.success(res, mover, "내 정보 조회 성공");
+});
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
+  getMyMoverDetail,
   createMoverFavorite,
   deleteMoverFavorite,
   getFavoriteDrivers,
