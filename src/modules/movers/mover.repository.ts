@@ -422,6 +422,17 @@ async function getMoverDetailExtra(id: number) {
 }
 
 /**
+ * user_id로 Driver 조회
+ * @param userId 사용자 ID
+ * @returns Driver 정보 또는 null
+ */
+async function findDriverByUserId(userId: string) {
+  return prisma.driver.findFirst({
+    where: { user_id: userId, isDelete: false },
+  });
+}
+
+/**
  * 기사님 즐겨찾기 생성
  * @param driver_id 기사님 ID
  * @param user_id 유저 ID
@@ -572,6 +583,7 @@ export default {
   searchMoversByNickname,
   getMoverDetailFull,
   getMoverDetailExtra,
+  findDriverByUserId,
   createMoverFavorite,
   deleteMoverFavorite,
   getMoverEstimateCount,

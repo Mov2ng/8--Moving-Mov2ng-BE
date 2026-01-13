@@ -1,4 +1,6 @@
 import moverRepository from "./mover.repository";
+import ApiError from "../../core/http/ApiError";
+import { HTTP_CODE, HTTP_STATUS } from "../../constants/http";
 
 import type { MoverListQueryDTO, MoverSortType } from "./mover.dto";
 
@@ -60,8 +62,7 @@ async function getMoversWithPrisma(
   const resultDrivers = hasNext ? drivers.slice(0, limit) : drivers;
 
   // 다음 커서 (마지막 아이템의 id)
-  const nextCursor =
-  hasNext ? drivers[limit].id : null;
+  const nextCursor = hasNext ? drivers[limit].id : null;
 
   return {
     list: resultDrivers.map((driver) => formatPrismaDriver(driver)),
@@ -98,9 +99,7 @@ async function getMoversWithRawQuery(
   const resultDrivers = hasNext ? drivers.slice(0, limit) : drivers;
 
   // 다음 커서 (마지막 아이템의 id)
-  const nextCursor =
-  hasNext ? drivers[limit].id : null;
-
+  const nextCursor = hasNext ? drivers[limit].id : null;
 
   return {
     list: resultDrivers.map((driver) => formatRawQueryDriver(driver)),
@@ -218,6 +217,29 @@ async function getMoverDetailFull(id: number, userId?: string) {
 }
 
 /**
+ * 기사님 본인 정보 조회 (마이페이지용)
+ * @param userId 현재 로그인한 사용자 ID
+ * @returns 기사님 본인의 상세 정보 (리뷰 포함)
+ * @description driverOnlyMiddleware에서 이미 Driver 레코드 존재 여부를 체크하므로
+ *              여기서는 항상 driver가 존재함을 보장받음
+ */
+async function getMyMoverDetail(userId: string) {
+  // user_id로 driver 찾기 (경량화)
+  const driver = await moverRepository.findDriverByUserId(userId);
+  if (!driver) {
+    // 이론적으로는 발생하지 않지만, 방어적 체크
+    throw new ApiError(
+      HTTP_STATUS.FORBIDDEN,
+      "기사님 프로필을 먼저 등록해주세요.",
+      HTTP_CODE.FORBIDDEN
+    );
+  }
+
+  // driver id로 상세 정보 조회 (본인이므로 userId 전달)
+  return getMoverDetailFull(driver.id, userId);
+}
+
+/**
  * 기사님 상세 조회 - 추가 데이터만
  * (리스트에서 이미 기본 정보를 가져온 경우 사용)
  */
@@ -305,6 +327,7 @@ export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
+  getMyMoverDetail,
   createMoverFavorite,
   getFavoriteDrivers,
   deleteMoverFavorite,
