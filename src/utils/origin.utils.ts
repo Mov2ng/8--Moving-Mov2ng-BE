@@ -5,10 +5,10 @@ import env from "../config/env";
  * origin 문자열이 localhost인지 확인하는 함수
  * @param origin 체크할 origin 문자열 (예: "http://localhost:3000", "http://127.0.0.1:3000")
  * @returns localhost인지 여부
-*/
+ */
 export function isLocalhostOrigin(origin: string | undefined | null): boolean {
   if (!origin) return false;
-  
+
   // localhost 또는 127.0.0.1 체크 (포트 번호 포함/미포함 모두 지원)
   return (
     origin.includes("localhost") ||
@@ -37,6 +37,12 @@ export function checkCorsOrigin(
   origin: string | undefined,
   callback: (err: Error | null, allow?: boolean) => void
 ): void {
+  console.log("[CORS]", {
+    nodeEnv: env.NODE_ENV,
+    origin,
+    corsOrigin: env.CORS_ORIGIN,
+  });
+
   // 로컬 환경: localhost의 모든 포트 허용
   if (env.NODE_ENV === "local") {
     callback(null, isLocalhostOrigin(origin));
