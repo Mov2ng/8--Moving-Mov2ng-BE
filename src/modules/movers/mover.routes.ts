@@ -6,7 +6,8 @@ import {
 } from "../../middlewares/auth.middleware";
 import validate from "../../middlewares/validate.middleware";
 import { MoverListQuerySchema } from "./mover.dto";
-import { driverOnlyMiddleware } from "../../middlewares/role.middleware";
+import { userOnlyMiddleware, driverOnlyMiddleware } from "../../middlewares/role.middleware";
+import { userOnlyOneDriverMiddleware } from "../../middlewares/estimate.middleware";
 
 const moverRouter = express.Router();
 
@@ -42,12 +43,15 @@ moverRouter.get("/:id/extra", moverController.getMoverDetailExtra);
 moverRouter.post(
   "/:id/favorite",
   authMiddleware,
+  userOnlyMiddleware,
+  userOnlyOneDriverMiddleware,
   moverController.createMoverFavorite
 );
 // 기사님 즐겨찾기 삭제 - 로그인 필수
 moverRouter.delete(
   "/:id/favorite",
   authMiddleware,
+  userOnlyMiddleware,
   moverController.deleteMoverFavorite
 );
 
