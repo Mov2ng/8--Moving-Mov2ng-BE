@@ -3,6 +3,7 @@ import ApiError from "../core/http/ApiError";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
 import { Role } from "@prisma/client";
 import { verifyToken } from "../utils/jwt";
+import moverRepository from "../modules/movers/mover.repository";
 
 /**
  * 역할 기반 권한 검증 미들웨어
@@ -38,23 +39,38 @@ export function userOnlyMiddleware(
 }
 
 /**
- * 기사님만 접근 가능
+ * 기사님만 접근 가능 (프로필 등록 필수)
+ * - Driver 역할인지 확인
+ * - Driver 레코드 존재 여부 확인 (프로필 등록 여부)
  * @param req Express 요청 객체
  * @param res Express 응답 객체
  * @param next 다음 미들웨어 호출
  * @returns 기사님만 접근 가능
- * @throws ApiError 기사님만 접근 가능하지 않을 시 에러
+ * @throws ApiError 기사님만 접근 가능하지 않거나 프로필이 없을 시 에러
  */
-export function driverOnlyMiddleware(
+export async function driverOnlyMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
+  // 1. Driver 역할인지 확인
   if (req.user?.role !== Role.DRIVER) {
     return next(
       new ApiError(
         HTTP_STATUS.FORBIDDEN,
         "기사님만 접근 가능합니다",
+        HTTP_CODE.FORBIDDEN
+      )
+    );
+  }
+
+  // 2. Driver 레코드 존재 여부 확인 (프로필 등록 여부)
+  const driver = await moverRepository.findDriverByUserId(req.user!.id);
+  if (!driver) {
+    return next(
+      new ApiError(
+        HTTP_STATUS.FORBIDDEN,
+        "기사님 프로필을 먼저 등록해주세요.",
         HTTP_CODE.FORBIDDEN
       )
     );
