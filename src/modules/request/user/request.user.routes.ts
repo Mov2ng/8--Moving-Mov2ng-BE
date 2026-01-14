@@ -1,5 +1,6 @@
 import express from "express";
 import { authMiddleware } from "../../../middlewares/auth.middleware";
+import { userOnlyMiddleware } from "../../../middlewares/role.middleware";
 import requestUserController from "./request.user.controller";
 
 const requestUserRouter = express.Router();
@@ -8,6 +9,7 @@ const requestUserRouter = express.Router();
 requestUserRouter.get(
   "/estimates",
   authMiddleware,
+  userOnlyMiddleware,
   requestUserController.getReceivedQuotes
 );
 
@@ -15,6 +17,7 @@ requestUserRouter.get(
 requestUserRouter.get(
   "/estimates/:estimateId/pending",
   authMiddleware,
+  userOnlyMiddleware,
   requestUserController.getPendingQuoteDetail
 );
 
@@ -22,6 +25,7 @@ requestUserRouter.get(
 requestUserRouter.get(
   "/estimates/:estimateId",
   authMiddleware,
+  userOnlyMiddleware,
   requestUserController.getQuoteDetail
 );
 
@@ -29,6 +33,7 @@ requestUserRouter.get(
 requestUserRouter.post(
   "/estimates/:estimateId/pending/accept",
   authMiddleware,
+  userOnlyMiddleware,
   requestUserController.acceptQuote
 );
 
