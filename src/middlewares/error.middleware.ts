@@ -3,7 +3,6 @@ import ApiError, { ApiErrorResponse } from "../core/http/ApiError";
 import logger from "../utils/logger";
 import env from "../config/env";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
-import { messageLink } from "discord.js";
 
 /**
  * 에러 처리 및 응답 반환 공통 미들웨어

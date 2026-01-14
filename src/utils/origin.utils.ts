@@ -37,12 +37,6 @@ export function checkCorsOrigin(
   origin: string | undefined,
   callback: (err: Error | null, allow?: boolean) => void
 ): void {
-  console.log("[CORS]", {
-    nodeEnv: env.NODE_ENV,
-    origin,
-    corsOrigin: env.CORS_ORIGIN,
-  });
-
   // 로컬 환경: localhost의 모든 포트 허용
   if (env.NODE_ENV === "local") {
     callback(null, isLocalhostOrigin(origin));

@@ -14,7 +14,7 @@ import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
 import noticeRouter from "./modules/notice/notice.routes";
-import userRouter from "./modules/user/user.routes";
+import profileRouter from "./modules/profile/profile.routes";
 import uploadRouter from "./modules/upload/upload.routes";
 import { SERVER } from "./constants/http";
 import { checkCorsOrigin } from "./utils/origin.utils";
@@ -49,7 +49,7 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
-app.use("/user", userRouter);
+app.use("/profile", profileRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
 app.use("/notice", noticeRouter);
