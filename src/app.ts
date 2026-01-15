@@ -52,7 +52,7 @@ app.use("/upload", uploadRouter);
 app.use("/requests", estimateRouter);
 app.use("/review", reviewRouter);
 
-app.use("/api", driverRequestRouter);
+app.use("/request/driver", driverRequestRouter);
 
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -39,6 +39,9 @@
  *         userId:
  *           type: string
  *           nullable: true
+ *         userName:
+ *           type: string
+ *           nullable: true
  *         requestCreatedAt:
  *           type: string
  *           format: date-time
@@ -152,7 +155,7 @@
  *         deletedEstimates:
  *           type: integer
  *
- * /requests/driver/list:
+ * /request/driver/list:
  *   get:
  *     summary: 드라이버 견적 요청 리스트
  *     operationId: list
@@ -230,7 +233,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/estimate/rejected:
+ * /request/driver/estimate/rejected:
  *   get:
  *     summary: 반려된 견적 리스트 (드라이버 본인)
  *     operationId: rejected
@@ -274,7 +277,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/estimate/list:
+ * /request/driver/estimate/list:
  *   get:
  *     summary: 드라이버 지정 견적 요청 리스트
  *     operationId: list
@@ -344,7 +347,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/estimate/accept:
+ * /request/driver/estimate/accept:
  *   post:
  *     summary: 드라이버 견적 승인(수락) 생성
  *     operationId: accept
@@ -389,7 +392,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/estimate/reject:
+ * /request/driver/estimate/reject:
  *   post:
  *     summary: 드라이버 견적 반려 생성
  *     operationId: reject
@@ -430,7 +433,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/estimate/update:
+ * /request/driver/estimate/update:
  *   post:
  *     summary: Driver estimate decision update
  *     operationId: updateEstimateDecision
@@ -502,7 +505,7 @@
  *       400:
  *         description: Bad request
  *
- * /requests/driver/request:
+ * /request/driver/request:
  *   delete:
  *     summary: Driver request delete
  *     operationId: deleteDriverRequest

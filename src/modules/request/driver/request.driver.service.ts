@@ -126,6 +126,7 @@ function toResult(
       estimateStatus: designatedEstimate?.status,
       estimatePrice: designatedEstimate?.price,
       userId: request.user_id,
+      userName: request.user?.name,
       requestCreatedAt: request.createdAt,
       requestUpdatedAt: request.updatedAt,
     };
