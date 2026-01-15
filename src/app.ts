@@ -38,7 +38,7 @@ app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
 app.use("/notice", noticeRouter);
 
-app.use("/api", driverRequestRouter);
+app.use("/request/driver", driverRequestRouter);
 
 app.use(errorMiddleware);
 

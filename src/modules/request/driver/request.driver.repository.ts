@@ -22,7 +22,7 @@ export type FindDriverRequestsParams = {
 };
 
 export type DriverRequestWithEstimates = Prisma.RequestGetPayload<{
-  include: { estimates: true };
+  include: { estimates: true; user: { select: { name: true } } };
 }>;
 
 export type DriverEstimateWithRequest = Prisma.estimateGetPayload<{
@@ -74,6 +74,7 @@ async function findDriverRequests({
         where: { driver_id: driverId },
         orderBy: [{ createdAt: SORT_ORDER.DESC }],
       },
+      user: { select: { name: true } },
     },
   });
 
