@@ -28,16 +28,11 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
-// 로컬 환경: localhost의 모든 포트 허용
-// 개발 환경: localhost의 모든 포트 자동 허용 + CORS_ORIGIN에 설정된 origin 추가
-// 운영 환경: CORS_ORIGIN에 설정된 origin만 허용
+// CORS 설정
+// - local BE: localhost만 허용
+// - deployed BE: localhost + CORS_ORIGIN에 설정된 도메인 허용
 const corsOptions = {
-  origin:
-    env.NODE_ENV === "production"
-      ? env.CORS_ORIGIN // 운영 환경: 배열로 변환
-        ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-        : false // 운영인데 CORS_ORIGIN 없으면 차단
-      : checkCorsOrigin, // 로컬/개발 환경: 함수로 동적 체크
+  origin: checkCorsOrigin, // 모든 환경에서 동일한 함수로 처리
   credentials: true, // 쿠키 / 인증 정보 전달 허용
 };
 
