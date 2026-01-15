@@ -29,7 +29,13 @@ export function isLocalhostRequest(req?: Request): boolean {
 }
 
 /**
- * 로컬/개발/운영단에 따른 CORS origin 체크 함수
+ * CORS origin 체크 함수
+ *
+ * 규칙:
+ * - local FE → local BE: localhost만 허용
+ * - local FE → dev deployed BE: localhost + CORS_ORIGIN에 설정된 도메인 허용
+ * - deployed FE → 운영 deployed BE: CORS_ORIGIN에 설정된 도메인만 허용
+ *
  * @param origin - 요청한 클라이언트의 origin (예: "http://localhost:3000")
  * @param callback - 결과를 전달하는 콜백 함수
  */
@@ -43,31 +49,52 @@ export function checkCorsOrigin(
     corsOrigin: env.CORS_ORIGIN,
   });
 
-  // 로컬 환경: localhost의 모든 포트 허용
-  // origin이 없을 때도 허용 (같은 origin 요청이거나 서버 간 요청)
-  if (env.NODE_ENV === "local") {
-    // origin이 없거나 localhost인 경우 모두 허용
-    callback(null, !origin || isLocalhostOrigin(origin));
+  // origin이 없을 때는 허용 (같은 origin 요청이거나 서버 간 요청)
+  if (!origin) {
+    callback(null, true);
     return;
   }
 
-  // 개발 환경: localhost의 모든 포트 자동 허용 + CORS_ORIGIN에 설정된 origin 허용
+  // 로컬 BE: localhost만 허용
+  if (env.NODE_ENV === "local") {
+    callback(null, isLocalhostOrigin(origin));
+    return;
+  }
+
+  // 개발 deployed BE: localhost + CORS_ORIGIN에 설정된 도메인 허용
   if (env.NODE_ENV === "development") {
-    // localhost는 자동 허용
+    // localhost는 허용 (local FE가 dev deployed BE에 접근 가능)
     if (isLocalhostOrigin(origin)) {
       callback(null, true);
       return;
     }
-    // CORS_ORIGIN에 설정된 origin 체크
+
+    // CORS_ORIGIN에 설정된 도메인만 허용
     if (env.CORS_ORIGIN) {
       const allowedOrigins = env.CORS_ORIGIN.split(",").map((o) => o.trim());
-      callback(null, allowedOrigins.includes(origin || ""));
-    } else {
-      callback(null, false);
+      callback(null, allowedOrigins.includes(origin));
+      return;
     }
+
+    // CORS_ORIGIN이 없으면 localhost 외의 origin은 차단
+    callback(null, false);
     return;
   }
 
-  // 운영 환경: 이 함수는 호출되지 않음 (corsOptions에서 배열로 처리)
+  // 운영 deployed BE: CORS_ORIGIN에 설정된 도메인만 허용 (localhost 차단)
+  if (env.NODE_ENV === "production") {
+    // CORS_ORIGIN에 설정된 도메인만 허용
+    if (env.CORS_ORIGIN) {
+      const allowedOrigins = env.CORS_ORIGIN.split(",").map((o) => o.trim());
+      callback(null, allowedOrigins.includes(origin));
+      return;
+    }
+
+    // CORS_ORIGIN이 없으면 모든 origin 차단
+    callback(null, false);
+    return;
+  }
+
+  // 그 외의 경우 차단
   callback(null, false);
 }
