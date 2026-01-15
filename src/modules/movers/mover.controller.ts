@@ -8,8 +8,12 @@ import type { MoverListQueryDTO } from "./mover.dto";
 // 기사님 목록 조회
 const getMovers = asyncWrapper(
   async (req: Request<{}, {}, {}, MoverListQueryDTO>, res: Response) => {
-    const { keyword, region, service, sort, cursor, limit = 20 } = req.query;
+    const { keyword, region, service, sort } = req.query;
     const userId = req.user?.id ?? undefined;
+
+    // query string은 항상 문자열이므로 숫자로 변환
+    const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
 
     const movers = await moverService.getMovers(
       { keyword, region, service, sort, cursor, limit },
@@ -66,10 +70,18 @@ const deleteMoverFavorite = asyncWrapper(
     return ApiResponse.success(res, mover, "기사님 즐겨찾기 삭제 성공");
   }
 );
+
+const getFavoriteDrivers = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user?.id as string;
+  const favorites = await moverService.getFavoriteDrivers(userId);
+  return ApiResponse.success(res, favorites, "찜한 기사님 조회 성공");
+});
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
   createMoverFavorite,
   deleteMoverFavorite,
+  getFavoriteDrivers,
 };

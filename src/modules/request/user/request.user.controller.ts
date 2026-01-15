@@ -47,6 +47,7 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
       createdAt: quote.request.createdAt,
     },
     driver: {
+      id: quote.driver?.id ?? 0,
       nickname: quote.driver?.nickname ?? "",
       driver_years: quote.driver?.driver_years ?? null,
       driver_intro: quote.driver?.driver_intro ?? null,
@@ -60,7 +61,12 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
 
 const getReceivedQuotes = asyncWrapper(
   async (
-    req: Request<{}, {}, {}, { requestId?: string; status?: string }>,
+    req: Request<
+      {},
+      {},
+      {},
+      { requestId?: string; status?: string; completedOnly?: string }
+    >,
     res: Response
   ) => {
     const userId = req.user?.id;
@@ -101,10 +107,15 @@ const getReceivedQuotes = asyncWrapper(
       }
     })();
 
+    const completedOnlyParam = req.query.completedOnly;
+    const completedOnly =
+      completedOnlyParam === "true" || completedOnlyParam === "1";
+
     const quotes = await requestUserService.getReceivedQuotes(
       userId,
       requestId,
-      status
+      status,
+      completedOnly
     );
 
     // 평균 별점, 리뷰/좋아요 수, 확정건수
@@ -189,8 +200,40 @@ const acceptQuote = asyncWrapper(
   }
 );
 
+const getQuoteDetail = asyncWrapper(
+  async (req: Request<{ estimateId: string }>, res: Response) => {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError(
+        HTTP_STATUS.AUTH_REQUIRED,
+        HTTP_MESSAGE.AUTH_REQUIRED,
+        HTTP_CODE.AUTH_REQUIRED
+      );
+    }
+
+    const estimateId = parseEstimateId(req.params.estimateId);
+
+    const quote = await requestUserService.getQuoteDetail(userId, estimateId);
+    if (!quote) {
+      throw new ApiError(
+        HTTP_STATUS.NOT_FOUND,
+        "견적을 찾을 수 없습니다.",
+        HTTP_CODE.NOT_FOUND
+      );
+    }
+
+    return ApiResponse.success(
+      res,
+      enrichQuote(quote),
+      "견적 상세 조회에 성공했습니다.",
+      HTTP_STATUS.OK
+    );
+  }
+);
+
 export default {
   getReceivedQuotes,
   getPendingQuoteDetail,
   acceptQuote,
+  getQuoteDetail,
 };

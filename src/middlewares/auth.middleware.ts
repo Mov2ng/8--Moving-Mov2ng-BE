@@ -2,8 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import ApiError from "../core/http/ApiError";
 import env from "../config/env";
-import prisma from "../config/db";
 import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
+import authRepository from "../modules/auth/auth.repository";
+import { Role } from "@prisma/client";
 
 /**
  * 선택적 인증 미들웨어
@@ -29,9 +30,12 @@ export async function optionalAuthMiddleware(
     const decoded = jwt.verify(token, env.JWT_SECRET);
 
     if (typeof decoded === "object" && decoded !== null && "id" in decoded) {
-      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      const user = await authRepository.findUserById(decoded.id);
+
       if (user) {
-        req.user = { id: user.id, role: user.role };
+        // password 제외하고 저장
+        const { password, ...userWithoutPassword } = user;
+        req.user = userWithoutPassword;
       }
     }
   } catch (error) {
@@ -86,8 +90,9 @@ export async function authMiddleware(
       );
     }
 
-    // DB에서 사용자 존재여부 확인
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    // DB에서 사용자 존재여부 확인 (삭제되지 않은 사용자만)
+    const user = await authRepository.findUserById(decoded.id);
+
     if (!user) {
       return next(
         new ApiError(
@@ -98,13 +103,26 @@ export async function authMiddleware(
       );
     }
 
+    // role 검증 (DB에서 가져왔지만 SQL 직접 수정이나 마이그레이션 이슈 등 발생 가능성 있음)
+    if (user.role !== Role.USER && user.role !== Role.DRIVER) {
+      return next(
+        new ApiError(
+          HTTP_STATUS.FORBIDDEN,
+          HTTP_MESSAGE.FORBIDDEN,
+          HTTP_CODE.FORBIDDEN
+        )
+      );
+    }
+
     // TODO: 필요시 추가 검증
     // - 사용자 상태 체크 (isDelete)
     // - 계정 활성화 상태
     // - 토큰 블랙리스트 체크
 
-    // req.user에 안전히 ID 할당
-    req.user = { id: user.id, role: user.role };
+    // req.user에 전체 사용자 정보 할당 (password 제외)
+    // authService.me에서 중복 DB 조회 방지
+    const { password, ...userWithoutPassword } = user;
+    req.user = userWithoutPassword;
 
     next();
   } catch (error) {

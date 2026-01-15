@@ -1,16 +1,16 @@
 /**
  * @swagger
  * tags:
- *   - name: Estimate
+ *   - name: Requests
  *     description: 견적 요청 관련 API
  */
 
 /**
  * @swagger
- * /estimate:
+ * /requests:
  *   post:
  *     summary: 견적 요청 생성
- *     tags: [Estimate]
+ *     tags: [Requests]
  *     description: |
  *       이사 견적 요청을 생성합니다.
  *       - 로그인이 필요합니다.
@@ -62,7 +62,7 @@
  *                   type: string
  *                   example: 견적 생성 성공
  *                 data:
- *                   $ref: '#/components/schemas/EstimateRequest'
+ *                   $ref: '#/components/schemas/Request'
  *       400:
  *         description: 잘못된 요청 (유효성 검사 실패)
  *         content:
@@ -142,10 +142,10 @@
 
 /**
  * @swagger
- * /estimate/{id}/request:
+ * /requests/{id}/estimate:
  *   post:
  *     summary: 기사님 지정 견적 요청
- *     tags: [Estimate]
+ *     tags: [Requests]
  *     description: |
  *       특정 기사님에게 견적을 요청합니다.
  *       - 로그인이 필요합니다.
@@ -276,7 +276,7 @@
  * @swagger
  * components:
  *   schemas:
- *     Estimate:
+ *     Request:
  *       type: object
  *       properties:
  *         id:
@@ -314,7 +314,7 @@
  *           format: date-time
  *           description: 수정일시
  *           example: "2025-12-22T10:30:00.000Z"
- *     EstimateRequest:
+ *     RequestEstimate:
  *       type: object
  *       properties:
  *         id:

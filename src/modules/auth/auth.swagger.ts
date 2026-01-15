@@ -273,7 +273,7 @@
  *                   example: 이메일 또는 비밀번호가 일치하지 않습니다
  *                 code:
  *                   type: string
- *                   example: AUTH_INVALID_CREDENTIALS
+ *                   example: UNAUTHORIZED
  *       404:
  *         description: 사용자를 찾을 수 없음
  *         content:
@@ -314,22 +314,16 @@
  *   post:
  *     summary: 로그아웃
  *     tags: [Auth]
- *     description: 로그아웃을 진행합니다. 리프레시 토큰을 무효화합니다.
+ *     description: 로그아웃을 진행합니다. 리프레시 토큰은 쿠키에서 자동으로 읽어옵니다.
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - refreshToken
- *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: 리프레시 토큰
- *                 example: "refresh-token-string"
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: HTTP-only 쿠키에 저장된 리프레시 토큰 (선택사항)
  *     responses:
  *       200:
  *         description: 로그아웃 성공
@@ -348,7 +342,7 @@
  *                   type: null
  *                   nullable: true
  *       401:
- *         description: 인증 실패
+ *         description: 인증 실패 (액세스 토큰이 없거나 유효하지 않음)
  *         content:
  *           application/json:
  *             schema:
@@ -363,6 +357,126 @@
  *                 code:
  *                   type: string
  *                   example: AUTH_REQUIRED
+ *       500:
+ *         description: 서버 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 서버 내부 오류가 발생했습니다.
+ *                 code:
+ *                   type: string
+ *                   example: INTERNAL_ERROR
+ */
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: 토큰 갱신
+ *     tags: [Auth]
+ *     description: 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급합니다. 리프레시 토큰은 쿠키에서 자동으로 읽어옵니다.
+ *     security: []
+ *     parameters:
+ *       - in: cookie
+ *         name: refreshToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: HTTP-only 쿠키에 저장된 리프레시 토큰
+ *     responses:
+ *       200:
+ *         description: 토큰 갱신 성공
+ *         headers:
+ *           Set-Cookie:
+ *             description: 새로운 리프레시 토큰이 HTTP-only 쿠키에 설정됩니다.
+ *             schema:
+ *               type: string
+ *               example: refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; SameSite=Strict; Max-Age=604800
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   description: 토큰 갱신 성공 메시지
+ *                   example: 토큰 갱신 성공
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                       description: 새로운 JWT 액세스 토큰 (2시간 만료)
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *       400:
+ *         description: 잘못된 요청 (리프레시 토큰이 쿠키에 없음)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 요청 형식이 올바르지 않습니다.
+ *                 code:
+ *                   type: string
+ *                   example: BAD_REQUEST
+ *                 details:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                         example: cookies.refreshToken
+ *                       reason:
+ *                         type: string
+ *                         example: 리프레시 토큰이 필요합니다
+ *       401:
+ *         description: 인증 실패 (리프레시 토큰이 유효하지 않거나 만료됨)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 유효하지 않은 토큰입니다.
+ *                 code:
+ *                   type: string
+ *                   example: AUTH_INVALID_TOKEN
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.
+ *                 code:
+ *                   type: string
+ *                   example: NOT_FOUND
  *       500:
  *         description: 서버 오류
  *         content:

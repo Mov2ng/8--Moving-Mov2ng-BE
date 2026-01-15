@@ -6,21 +6,28 @@ const requestUserRouter = express.Router();
 
 // 받은 견적 목록 조회
 requestUserRouter.get(
-  "/quotes",
+  "/estimates",
   authMiddleware,
   requestUserController.getReceivedQuotes
 );
 
 // 대기중인 견적 상세 조회
 requestUserRouter.get(
-  "/quotes/pending/:estimateId",
+  "/estimates/:estimateId/pending",
   authMiddleware,
   requestUserController.getPendingQuoteDetail
 );
 
+// 받은 견적 상세 조회 (상태 무관)
+requestUserRouter.get(
+  "/estimates/:estimateId",
+  authMiddleware,
+  requestUserController.getQuoteDetail
+);
+
 // 견적 확정
 requestUserRouter.post(
-  "/quotes/pending/:estimateId/accept",
+  "/estimates/:estimateId/pending/accept",
   authMiddleware,
   requestUserController.acceptQuote
 );
