@@ -44,8 +44,10 @@ export function checkCorsOrigin(
   });
 
   // 로컬 환경: localhost의 모든 포트 허용
+  // origin이 없을 때도 허용 (같은 origin 요청이거나 서버 간 요청)
   if (env.NODE_ENV === "local") {
-    callback(null, isLocalhostOrigin(origin));
+    // origin이 없거나 localhost인 경우 모두 허용
+    callback(null, !origin || isLocalhostOrigin(origin));
     return;
   }
 
