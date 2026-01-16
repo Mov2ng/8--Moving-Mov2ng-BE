@@ -25,6 +25,14 @@ export const quoteInclude = {
         where: { status: EstimateStatus.ACCEPTED },
         select: { id: true },
       },
+      favoriteDriver: {
+        where: {
+          isDelete: false,
+        },
+        select: {
+          user_id: true,
+        },
+      },
       _count: {
         select: {
           review: true,

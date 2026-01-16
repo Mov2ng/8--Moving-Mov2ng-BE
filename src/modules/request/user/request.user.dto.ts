@@ -19,5 +19,6 @@ export interface QuoteDetailResponse {
     reviewCount: number;
     likeCount: number;
     confirmedCount: number;
+    isFavorite: boolean;
   };
 }
