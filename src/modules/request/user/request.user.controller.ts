@@ -21,7 +21,10 @@ const parseEstimateId = (raw: string | undefined) => {
   return id;
 };
 
-function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
+function enrichQuote(
+  quote: QuoteWithDriver,
+  userId: string
+): QuoteDetailResponse {
   const reviews = quote.driver?.review ?? [];
   const reviewCount = quote.driver?._count?.review ?? 0;
   const likeCount = quote.driver?._count?.likes ?? 0;
@@ -34,6 +37,11 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
           0
         ) / reviews.length
       : 0;
+
+  // 현재 사용자의 즐겨찾기 여부 확인
+  const isFavorite =
+    quote.driver?.favoriteDriver?.some((fav) => fav.user_id === userId) ??
+    false;
 
   return {
     id: quote.id,
@@ -55,6 +63,7 @@ function enrichQuote(quote: QuoteWithDriver): QuoteDetailResponse {
       reviewCount,
       likeCount,
       confirmedCount,
+      isFavorite,
     },
   };
 }
@@ -118,8 +127,8 @@ const getReceivedQuotes = asyncWrapper(
       completedOnly
     );
 
-    // 평균 별점, 리뷰/좋아요 수, 확정건수
-    const enriched = quotes.map(enrichQuote);
+    // 평균 별점, 리뷰/좋아요 수, 확정건수, 즐겨찾기 여부
+    const enriched = quotes.map((quote) => enrichQuote(quote, userId));
 
     return ApiResponse.success(
       res,
@@ -157,7 +166,7 @@ const getPendingQuoteDetail = asyncWrapper(
       );
     }
 
-    const enriched = enrichQuote(quote);
+    const enriched = enrichQuote(quote, userId);
 
     return ApiResponse.success(
       res,
@@ -193,7 +202,7 @@ const acceptQuote = asyncWrapper(
 
     return ApiResponse.success(
       res,
-      enrichQuote(updated),
+      enrichQuote(updated, userId),
       "견적 확정에 성공했습니다.",
       HTTP_STATUS.OK
     );
@@ -224,7 +233,7 @@ const getQuoteDetail = asyncWrapper(
 
     return ApiResponse.success(
       res,
-      enrichQuote(quote),
+      enrichQuote(quote, userId),
       "견적 상세 조회에 성공했습니다.",
       HTTP_STATUS.OK
     );
