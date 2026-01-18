@@ -111,6 +111,8 @@ const getReceivedQuotes = asyncWrapper(
           return EstimateStatus.ACCEPTED;
         case "REJECTED":
           return EstimateStatus.REJECTED;
+        case "COMPLETED":
+          return EstimateStatus.COMPLETED;
         default:
           return undefined;
       }

@@ -1,6 +1,6 @@
 export interface QuoteDetailResponse {
   id: number;
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  status: "PENDING" | "ACCEPTED" | "REJECTED" | "COMPLETED";
   price: number;
   request: {
     moving_type: string;
