@@ -113,7 +113,7 @@ async function findPendingQuoteDetail({
   return prisma.estimate.findFirst({
     where: {
       id: estimateId,
-      status: EstimateStatus.PENDING,
+      status: EstimateStatus.ACCEPTED,
       request: { user_id: userId },
     },
     include: quoteInclude,
@@ -132,11 +132,11 @@ async function acceptQuote({ userId, estimateId }: AcceptQuoteParams) {
 
   if (!quote) return null;
 
-  if (quote.status !== EstimateStatus.PENDING) return quote;
+  if (quote.status !== EstimateStatus.ACCEPTED) return quote;
 
   return prisma.estimate.update({
     where: { id: estimateId },
-    data: { status: EstimateStatus.ACCEPTED, updatedAt: new Date() },
+    data: { status: EstimateStatus.COMPLETED, updatedAt: new Date() },
     include: quoteInclude,
   });
 }
