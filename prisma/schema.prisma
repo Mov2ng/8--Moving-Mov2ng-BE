@@ -203,6 +203,7 @@ enum EstimateStatus {
   PENDING
   ACCEPTED
   REJECTED
+  COMPLETED
 }
 
 enum tableName {

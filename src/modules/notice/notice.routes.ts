@@ -2,6 +2,7 @@ import { Router } from "express";
 import validate from "../../middlewares/validate.middleware";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import noticeController from "./notice.controller";
+import { userOnlyMiddleware } from "../../middlewares/role.middleware";
 import {
   noticeListDto,
   noticeReadAllDto,
@@ -14,6 +15,7 @@ router.get(
   "/user",
   validate(noticeListDto),
   authMiddleware,
+  userOnlyMiddleware,
   noticeController.getUserNotices
 );
 
