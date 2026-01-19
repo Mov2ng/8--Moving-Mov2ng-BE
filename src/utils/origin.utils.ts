@@ -43,11 +43,6 @@ export function checkCorsOrigin(
   origin: string | undefined,
   callback: (err: Error | null, allow?: boolean) => void
 ): void {
-  console.log("[CORS]", {
-    nodeEnv: env.NODE_ENV,
-    origin,
-    corsOrigin: env.CORS_ORIGIN,
-  });
 
   // origin이 없을 때는 허용 (같은 origin 요청이거나 서버 간 요청)
   if (!origin) {

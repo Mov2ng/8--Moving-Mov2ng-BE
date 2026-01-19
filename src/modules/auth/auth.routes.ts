@@ -8,6 +8,7 @@ import {
 } from "../../validators/auth.validator";
 import { authMiddleware } from "../../middlewares/auth.middleware";
 import { guestOnlyMiddleware } from "../../middlewares/role.middleware";
+import { loginRateLimiter } from "../../middlewares/rateLimit.middleware";
 
 const authRouter = express.Router();
 
@@ -20,6 +21,7 @@ authRouter.post(
 
 authRouter.post(
   "/login",
+  loginRateLimiter, // 요청 횟수 제한 미들웨어
   validate(loginSchema),
   guestOnlyMiddleware,
   authController.login

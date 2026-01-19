@@ -1,9 +1,7 @@
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
-// 기본 위치에도 생성 (seed/reset용)
 generator client_default {
   provider        = "prisma-client-js"
   previewFeatures = []
@@ -16,8 +14,8 @@ datasource db {
 model User {
   id             String           @id @default(uuid())
   email          String           @unique
-  password       String? // OAuth 사용자는 null 가능
-  phone_number   String? // OAuth 사용자는 카카오에서 제공 안할 수 있음
+  password       String
+  phone_number   String
   name           String
   profileImage   String?
   role           Role             @default(USER)
@@ -162,9 +160,6 @@ enum Role {
 
 enum provider {
   LOCAL
-  KAKAO
-  GOOGLE
-  NAVER
 }
 
 enum Category {
