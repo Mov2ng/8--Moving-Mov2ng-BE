@@ -1,0 +1,40 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. EC2 배포
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ec2-user/8--Moving-Mov2ng-BE
+
+            echo "📦 Pull latest code"
+            git pull origin main
+
+            echo "📦 Install dependencies"
+            npm install
+
+            echo "🧬 Prisma generate"
+            npx prisma generate
+
+            echo "🏗 Build"
+            npm run build
+
+            echo "♻️ Restart PM2"
+            pm2 reload all --update-env
