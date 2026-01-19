@@ -100,6 +100,7 @@ export const HTTP_MESSAGE = {
   AUTH_EXPIRED_TOKEN: "토큰이 만료되었습니다. 다시 로그인해주세요.",
   AUTH_REQUIRED: "로그인이 필요한 서비스입니다.",
   AUTH_FAILED: "인증에 실패했습니다. 다시 시도해주세요.",
+  RATE_LIMIT_EXCEEDED: "너무 많은 로그인 시도가 있었습니다. 15분 후 다시 시도해주세요.",
 
   // User
   USER_EMAIL_EXISTS: "이미 사용 중인 이메일입니다.",
@@ -142,6 +143,7 @@ export const HTTP_CODE = {
   AUTH_EXPIRED_TOKEN: "AUTH_EXPIRED_TOKEN",
   AUTH_REQUIRED: "AUTH_REQUIRED",
   AUTH_FAILED: "AUTH_FAILED",
+  RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
 
   // User
   USER_EMAIL_EXISTS: "USER_EMAIL_EXISTS",
