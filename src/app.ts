@@ -16,6 +16,7 @@ import estimateRouter from "./modules/estimate/estimate.routes";
 import noticeRouter from "./modules/notice/notice.routes";
 import profileRouter from "./modules/profile/profile.routes";
 import uploadRouter from "./modules/upload/upload.routes";
+import historyRouter from "./modules/history/history.routes";
 import { SERVER } from "./constants/http";
 import { checkCorsOrigin } from "./utils/origin.utils";
 
@@ -51,7 +52,7 @@ app.use("/notice", noticeRouter);
 app.use("/upload", uploadRouter);
 app.use("/requests", estimateRouter);
 app.use("/review", reviewRouter);
-
+app.use("/history", historyRouter);
 app.use("/request/driver", driverRequestRouter);
 
 // Swagger UI 엔드포인트
