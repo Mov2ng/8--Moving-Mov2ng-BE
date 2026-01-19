@@ -40,6 +40,9 @@ const envSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().min(1),
   AWS_SECRET_ACCESS_KEY: z.string().min(1),
   AWS_S3_BUCKET_NAME: z.string().min(1),
+
+  // Sentry DSN (선택사항)
+  SENTRY_DSN: z.string().optional(),
 });
 
 // Zod에서 타입 추론

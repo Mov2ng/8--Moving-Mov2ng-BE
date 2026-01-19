@@ -1,4 +1,7 @@
-﻿import express from "express";
+// IMPORTANT: Sentry를 가장 먼저 초기화 (다른 모든 import보다 위에)
+import "./services/sentry";
+import * as Sentry from "@sentry/node";
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
@@ -58,11 +61,25 @@ app.use("/request/driver", driverRequestRouter);
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// 공통 에러 핸들러
 // 상태 체크 엔드포인트
 app.get("/healthz", (_, res) => {
   res.status(200).send("OK");
 });
+
+// Sentry 테스트 엔드포인트
+app.get("/debug-sentry", (_, res) => {
+  // 로그 전송
+  Sentry.logger.info("User triggered test error", {
+    action: "test_error_endpoint",
+  });
+  // 메트릭 전송
+  Sentry.metrics.count("test_counter", 1);
+  // 에러 발생
+  throw new Error("My first Sentry error!");
+});
+
+// Sentry 에러 핸들러 (에러 미들웨어 전에)
+Sentry.setupExpressErrorHandler(app);
 
 // 공통 에러 핸들러 등록
 app.use(errorMiddleware);
