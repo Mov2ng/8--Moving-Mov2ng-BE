@@ -13,27 +13,29 @@ import errorMiddleware from "./middlewares/error.middleware";
 import { swaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
-import userRouter from "./modules/user/user.routes";
+import noticeRouter from "./modules/notice/notice.routes";
+import profileRouter from "./modules/profile/profile.routes";
 import uploadRouter from "./modules/upload/upload.routes";
+import { SERVER } from "./constants/http";
+import { checkCorsOrigin } from "./utils/origin.utils";
 
 const app = express();
-app.use(express.json());
-app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
 
 // 리버스 프록시(nginx 등) 뒤에서 실행될 때 X-Forwarded-* 헤더를 신뢰해
 // 실제 클라이언트 IP와 HTTPS 여부를 올바르게 인식하도록 설정
 app.set("trust proxy", 1);
 
+app.use(express.json());
+app.use(cookieParser()); // 쿠키 읽기 위한 쿠키 파싱 활성화
+
 // CORS 설정
+// - local BE: localhost만 허용
+// - deployed BE: localhost + CORS_ORIGIN에 설정된 도메인 허용
 const corsOptions = {
-  origin:
-    env.NODE_ENV === "production" && env.CORS_ORIGIN
-      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 운영
-      : env.CORS_ORIGIN
-      ? env.CORS_ORIGIN.split(",").map((origin) => origin.trim()) // 개발 서버(Render)
-      : true, // 로컬
-  credentials: true, // 쿠키 전달 허용
+  origin: checkCorsOrigin, // 모든 환경에서 동일한 함수로 처리
+  credentials: true, // 쿠키 / 인증 정보 전달 허용
 };
+
 app.use(cors(corsOptions));
 
 app.get("/", (_, res) => {
@@ -42,17 +44,15 @@ app.get("/", (_, res) => {
 
 // 라우트
 app.use("/auth", authRouter);
-app.use("/user", userRouter);
-app.use("/estimate", estimateRouter);
+app.use("/profile", profileRouter);
 app.use("/movers", moverRouter);
 app.use("/request/user", requestUserRouter);
+app.use("/notice", noticeRouter);
 app.use("/upload", uploadRouter);
 app.use("/requests", estimateRouter);
-app.use("/movers", moverRouter);
-app.use("/request/user", requestUserRouter);
 app.use("/review", reviewRouter);
 
-app.use("/api", driverRequestRouter);
+app.use("/request/driver", driverRequestRouter);
 
 // Swagger UI 엔드포인트
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -63,11 +63,10 @@ app.get("/healthz", (_, res) => {
   res.status(200).send("OK");
 });
 
-
 // 공통 에러 핸들러 등록
 app.use(errorMiddleware);
 
-const port = env.PORT || 3000;
+const port = env.PORT || SERVER.DEFAULT_PORT;
 app.listen(port, () => {
   console.log(`Server running on ${port}`);
 });

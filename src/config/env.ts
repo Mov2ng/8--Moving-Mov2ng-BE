@@ -1,24 +1,29 @@
+import dotenv from "dotenv";
+import z from "zod";
+import { SERVER } from "../constants/http";
+
 /**
  * 환경 변수 로드 및 검증 모듈
  * - dotenc로 .env 로드
  * - zod로 exprected 환경 변수의 타입, 필수 여부 검증
  * 해당 파일 import시 검증된 env 객체 사용 가능
  */
-import dotenv from "dotenv";
-import z from "zod";
 
 // .env 파일 로드
 dotenv.config();
 
 // env 타입/기본값 정의용 zod 스키마
 const envSchema = z.object({
-  // 개발/운영/테스트 필수, 기본값 설정
+  // 환경 설정 (로컬/개발서버/운영서버)
+  // local: 로컬 개발 환경 (기본값, HTTP, 같은 origin)
+  // development: 개발 서버 (HTTPS, cross-origin)
+  // production: 운영 서버 (HTTPS, cross-origin)
   NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+    .enum(["local", "development", "production", "test"]) // TODO: test 제거
+    .default("local"),
 
   // 포트번호 숫자 변환, 기본값 설정
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(SERVER.DEFAULT_PORT),
 
   // DB 연결 URL이 빈 문자열이나 없을 시 에러
   DATABASE_URL: z.string().min(1),

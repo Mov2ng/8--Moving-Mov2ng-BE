@@ -8,41 +8,112 @@ import {
   verifyToken,
 } from "../../utils/jwt";
 import authRepository from "./auth.repository";
-import env from "../../config/env";
 import { Role } from "@prisma/client";
+import env from "../../config/env";
+import { SERVER } from "../../constants/http";
+import { isLocalhostRequest } from "../../utils/origin.utils";
 
-const isProduction = env.NODE_ENV === "production";
+// NODE_ENV가 'local'인 경우에만 로컬 환경으로 간주 (HTTP, SameSite: Strict)
+// 그 외(production, development)는 모두 배포 환경으로 간주 (HTTPS, SameSite: None)
+const isLocal = env.NODE_ENV === "local";
 
 /**
  * refreshToken 쿠키 설정 유틸 함수
  * - HTTP-only 쿠키로 설정하여 XSS 공격 방지
- * - secure 옵션으로 HTTPS에서만 전송 (프로덕션 환경)
- * - sameSite: strict로 CSRF 공격 방지
+ * - 로컬/배포 환경에 따라 secure, sameSite 옵션 분기
+ * - development 환경에서는 요청 origin에 따라 동적으로 설정
  * @param res Express Response 객체
  * @param refreshToken 설정할 refreshToken 문자열
+ * @param req Express Request 객체 (origin 확인용)
  */
-function setRefreshTokenCookie(res: Response, refreshToken: string) {
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true, // JS 접근 불가 (XSS 공격 방지)
-    // 운영 환경에서는 secure: true, sameSite: "none"
-    // 개발 환경에서는 secure: false, sameSite: "strict"
-    secure: isProduction, // 운영 환경: HTTPS에서만 전송 (프록시 환경에서는 trust proxy 설정 필요)
-    sameSite: isProduction ? "none" : "strict", //
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7일,
+function setRefreshTokenCookie(
+  res: Response,
+  refreshToken: string,
+  req?: Request
+) {
+  // LOCAL FE - LOCAL BE
+  if (isLocal) {
+    const cookieOptions = {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict" as const,
+      maxAge: SERVER.COOKIE_MAX_AGE_7_DAYS,
+      path: "/",
+    };
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+    return;
+  }
+
+  // development 환경: origin에 따라 동적 설정
+  if (env.NODE_ENV === "development" && req) {
+    const isLocalhost = isLocalhostRequest(req);
+
+    if (isLocalhost) {
+      // LOCAL FE - DEPLOYED BE
+      const cookieOptions = {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict" as const,
+        maxAge: SERVER.COOKIE_MAX_AGE_7_DAYS,
+        path: "/",
+      };
+      res.cookie("refreshToken", refreshToken, cookieOptions);
+      return;
+    }
+  }
+
+  // DEPLOYED FE - DEPLOYED BE
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none" as const,
+    maxAge: SERVER.COOKIE_MAX_AGE_7_DAYS,
     path: "/",
-  });
+  };
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
 }
 
 /**
  * refreshToken 쿠키 삭제 유틸 함수
  * - 로그아웃 또는 토큰 만료 시 쿠키 삭제
+ * - 쿠키 설정과 동일한 옵션으로 삭제해야 함
  * @param res Express Response 객체
+ * @param req Express Request 객체 (origin 확인용, optional)
  */
-function clearRefreshTokenCookie(res: Response) {
+function clearRefreshTokenCookie(res: Response, req?: Request) {
+  // 로컬 환경: 항상 strict, secure: false
+  if (isLocal) {
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      path: "/",
+    });
+    return;
+  }
+
+  // development 환경: origin에 따라 동적 설정
+  if (env.NODE_ENV === "development" && req) {
+    const isLocalhost = isLocalhostRequest(req);
+
+    if (isLocalhost) {
+      // localhost 요청: strict, secure: false
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: false,
+        sameSite: "strict",
+        path: "/",
+      });
+      return;
+    }
+  }
+
+  // production 또는 development의 배포 서버 요청: none, secure: true
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "strict",
+    secure: true,
+    sameSite: "none",
     path: "/",
   });
 }
@@ -133,21 +204,21 @@ async function login(
   const newRefreshToken = generateRefreshToken({ id: user.id });
 
   // refreshToken HTTP-only 쿠키에 저장
-  setRefreshTokenCookie(res, newRefreshToken);
+  setRefreshTokenCookie(res, newRefreshToken, req);
 
   const { password: _, ...userWithoutPassword } = user;
   return { ...userWithoutPassword, accessToken };
 }
 
-async function logout(res: Response) {
+async function logout(res: Response, req?: Request) {
   // TODO. 향후 필요시 아래 로직 추가 가능:
   // - DB에 refreshToken 저장 시: 토큰 검증 후 DB에서 무효화
   // - Token blacklist 사용 시: 검증 후 블랙리스트에 추가
   // - 로그아웃한 토큰 추적 필요 시: 검증 후 로그 기록
-  clearRefreshTokenCookie(res);
+  clearRefreshTokenCookie(res, req);
 }
 
-async function refresh(refreshToken: string, res: Response) {
+async function refresh(refreshToken: string, res: Response, req?: Request) {
   let decoded;
   try {
     // refreshToken 유효성 검증 및 에러 핸들링
@@ -155,14 +226,14 @@ async function refresh(refreshToken: string, res: Response) {
   } catch (error) {
     // refreshToken이 유효하지 않거나 만료된 경우 쿠키 삭제 후 에러 반환
     // TODO: 프론트엔드에서 401 에러를 받으면 자동 로그아웃 처리 추가할 것
-    clearRefreshTokenCookie(res);
+    clearRefreshTokenCookie(res, req);
     throw error; // verifyToken이 이미 ApiError를 던지므로 그대로 전달
   }
 
   // jwt.verify는 string | JwtPayload를 반환할 수 있으므로 타입 체크 필요
   if (typeof decoded !== "object" || decoded === null || !("id" in decoded)) {
     // 타입이 맞지 않으면 쿠키 삭제 후 에러 반환
-    clearRefreshTokenCookie(res);
+    clearRefreshTokenCookie(res, req);
     throw new ApiError(
       HTTP_STATUS.UNAUTHORIZED,
       "유효하지 않은 리프레시 토큰입니다. 다시 로그인해주세요.",
@@ -174,7 +245,7 @@ async function refresh(refreshToken: string, res: Response) {
   const user = await authRepository.findUserById(decoded.id);
   if (!user) {
     // 사용자가 삭제된 경우 쿠키 삭제 후 에러 반환
-    clearRefreshTokenCookie(res);
+    clearRefreshTokenCookie(res, req);
     throw new ApiError(
       HTTP_STATUS.NOT_FOUND,
       "사용자 정보를 찾을 수 없습니다. 다시 로그인해주세요.",
@@ -187,22 +258,10 @@ async function refresh(refreshToken: string, res: Response) {
   const newRefreshToken = generateRefreshToken({ id: user.id });
 
   // refreshToken HTTP-only 쿠키에 저장
-  setRefreshTokenCookie(res, newRefreshToken);
+  setRefreshTokenCookie(res, newRefreshToken, req);
 
   // accessToken만 반환 (localStorage에 저장할 예정)
   return { accessToken: newAccessToken };
-}
-
-async function me(id: string) {
-  const user = await authRepository.findUserById(id);
-  if (!user) {
-    throw new ApiError(
-      HTTP_STATUS.NOT_FOUND,
-      "사용자 정보를 찾을 수 없습니다.",
-      HTTP_CODE.NOT_FOUND
-    );
-  }
-  return user;
 }
 
 export default {
@@ -210,5 +269,4 @@ export default {
   login,
   logout,
   refresh,
-  me,
 };

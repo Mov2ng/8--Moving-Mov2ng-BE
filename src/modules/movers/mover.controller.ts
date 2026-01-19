@@ -45,6 +45,7 @@ const getMoverDetailExtra = asyncWrapper(
   }
 );
 
+// 기사님 즐겨찾기 생성
 const createMoverFavorite = asyncWrapper(
   async (req: Request<{ id: string }>, res: Response) => {
     const driverId = req.params.id;
@@ -58,6 +59,7 @@ const createMoverFavorite = asyncWrapper(
   }
 );
 
+// 기사님 즐겨찾기 삭제
 const deleteMoverFavorite = asyncWrapper(
   async (req: Request<{ id: string }>, res: Response) => {
     const driverId = req.params.id;
@@ -71,16 +73,25 @@ const deleteMoverFavorite = asyncWrapper(
   }
 );
 
+// 즐겨찾기한 기사 목록 조회
 const getFavoriteDrivers = asyncWrapper(async (req: Request, res: Response) => {
   const userId = req.user?.id as string;
   const favorites = await moverService.getFavoriteDrivers(userId);
   return ApiResponse.success(res, favorites, "찜한 기사님 조회 성공");
 });
 
+// 기사님 본인 정보 조회 (마이페이지용)
+const getMyMoverDetail = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user!.id; // authMiddleware로 인증됨
+  const mover = await moverService.getMyMoverDetail(userId); 
+  return ApiResponse.success(res, mover, "내 정보 조회 성공");
+});
+
 export default {
   getMovers,
   getMoverDetailFull,
   getMoverDetailExtra,
+  getMyMoverDetail,
   createMoverFavorite,
   deleteMoverFavorite,
   getFavoriteDrivers,

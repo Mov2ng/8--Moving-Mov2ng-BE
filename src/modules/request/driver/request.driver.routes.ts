@@ -6,39 +6,69 @@ import {
   driverDesignatedRequestListDto,
   driverEstimateAcceptDto,
   driverEstimateRejectDto,
+  driverEstimateUpdateDto,
+  driverRequestDeleteDto,
   driverRejectedEstimateListDto,
 } from "../../../validators/request.driver.validation";
+import { authMiddleware } from "../../../middlewares/auth.middleware";
+import { driverOnlyMiddleware } from "../../../middlewares/role.middleware";
 
 const router = Router();
 
 router.get(
-  "/requests/driver/list",
+  "/list",
   validate(driverRequestListDto),
+  authMiddleware,
+  driverOnlyMiddleware,
   requestDriverController.getDriverRequests
 );
 
 router.get(
-  "/requests/driver/estimate/list",
+  "/estimate/list",
   validate(driverDesignatedRequestListDto),
+  authMiddleware,
+  driverOnlyMiddleware,
   requestDriverController.getDriverDesignatedRequests
 );
 
 router.post(
-  "/requests/driver/estimate/accept",
+  "/estimate/accept",
   validate(driverEstimateAcceptDto),
+  authMiddleware,
+  driverOnlyMiddleware,
   requestDriverController.acceptEstimate
 );
 
 router.post(
-  "/requests/driver/estimate/reject",
+  "/estimate/reject",
   validate(driverEstimateRejectDto),
+  authMiddleware,
+  driverOnlyMiddleware,
   requestDriverController.rejectEstimate
 );
 
+router.post(
+  "/estimate/update",
+  validate(driverEstimateUpdateDto),
+  authMiddleware,
+  driverOnlyMiddleware,
+  requestDriverController.updateEstimateDecision
+);
+
 router.get(
-  "/requests/driver/estimate/rejected",
+  "/estimate/rejected",
   validate(driverRejectedEstimateListDto),
+  authMiddleware,
+  driverOnlyMiddleware,
   requestDriverController.getRejectedEstimates
+);
+
+router.delete(
+  "/request",
+  validate(driverRequestDeleteDto),
+  authMiddleware,
+  driverOnlyMiddleware,
+  requestDriverController.deleteDriverRequest
 );
 
 export default router;

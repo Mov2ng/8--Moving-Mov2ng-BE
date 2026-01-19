@@ -32,7 +32,7 @@ const login = asyncWrapper(
 );
 
 const logout = asyncWrapper(async (req: Request, res: Response) => {
-  await authService.logout(res);
+  await authService.logout(res, req);
   logger.info(`[${new Date().toISOString()}] 로그아웃 성공`);
   return ApiResponse.success(res, null, "로그아웃 성공", HTTP_STATUS.OK);
 });
@@ -50,21 +50,26 @@ const refresh = asyncWrapper(async (req: Request, res: Response) => {
   }
 
   // refresh 함수가 쿠키에 refreshToken을 설정하고 accessToken만 반환
-  const tokens = await authService.refresh(refreshToken, res);
+  const tokens = await authService.refresh(refreshToken, res, req);
   return ApiResponse.success(res, tokens, "토큰 갱신 성공", HTTP_STATUS.OK);
 });
 
 const me = asyncWrapper(async (req: Request, res: Response) => {
-  const userId = req.user?.id;
-  if (!userId) {
+  // authMiddleware에서 이미 user 정보를 조회했으므로 DB 재조회 불필요
+  if (!req.user) {
     throw new ApiError(
       HTTP_STATUS.AUTH_REQUIRED,
       HTTP_MESSAGE.AUTH_REQUIRED,
       HTTP_CODE.AUTH_REQUIRED
     );
   }
-  const user = await authService.me(userId);
-  return ApiResponse.success(res, user, "내 정보 조회 성공", HTTP_STATUS.OK);
+  // req.user에 이미 전체 user 정보가 있음 (password 제외)
+  return ApiResponse.success(
+    res,
+    req.user,
+    "내 정보 조회 성공",
+    HTTP_STATUS.OK
+  );
 });
 
 export default {

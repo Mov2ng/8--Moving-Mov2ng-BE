@@ -22,7 +22,7 @@ export type FindDriverRequestsParams = {
 };
 
 export type DriverRequestWithEstimates = Prisma.RequestGetPayload<{
-  include: { estimates: true };
+  include: { estimates: true; user: { select: { name: true } } };
 }>;
 
 export type DriverEstimateWithRequest = Prisma.estimateGetPayload<{
@@ -74,6 +74,7 @@ async function findDriverRequests({
         where: { driver_id: driverId },
         orderBy: [{ createdAt: SORT_ORDER.DESC }],
       },
+      user: { select: { name: true } },
     },
   });
 
@@ -188,6 +189,20 @@ const driverRequestRepository = {
     ]);
 
     return { totalItems, estimates };
+  },
+  async deleteRequestWithEstimates(requestId: number): Promise<{
+    requestId: number;
+    deletedEstimates: number;
+  }> {
+    const [deletedEstimates, deletedRequest] = await prisma.$transaction([
+      prisma.estimate.deleteMany({ where: { request_id: requestId } }),
+      prisma.request.delete({ where: { id: requestId } }),
+    ]);
+
+    return {
+      requestId: deletedRequest.id,
+      deletedEstimates: deletedEstimates.count,
+    };
   },
 };
 

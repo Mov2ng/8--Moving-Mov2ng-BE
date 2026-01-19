@@ -10,7 +10,9 @@ import driverRequestRepository from "./request.driver.repository";
 import {
   DriverEstimateAcceptDto,
   DriverEstimateRejectDto,
+  DriverEstimateUpdateDto,
   DriverDesignatedListDto,
+  DriverRequestDeleteDto,
   DriverRequestListDto,
   DriverRejectedEstimateListDto,
 } from "../../../validators/request.driver.validation";
@@ -124,6 +126,7 @@ function toResult(
       estimateStatus: designatedEstimate?.status,
       estimatePrice: designatedEstimate?.price,
       userId: request.user_id,
+      userName: request.user?.name,
       requestCreatedAt: request.createdAt,
       requestUpdatedAt: request.updatedAt,
     };
@@ -213,7 +216,7 @@ async function createEstimateAndApprove(
   );
 
   if (existing) {
-    if (existing.status === EstimateStatus.ACCEPTED) {
+    if (existing.status === EstimateStatus.ACCEPTED || existing.status === EstimateStatus.REJECTED) {
       throw new ApiError(
         HTTP_STATUS.BAD_REQUEST,
         ESTIMATE_MESSAGE.ALREADY_DECIDED,
@@ -221,18 +224,8 @@ async function createEstimateAndApprove(
       );
     }
 
-    if (existing.status === EstimateStatus.REJECTED) {
-      // 반려 → 승인으로 수정 허용
-      return driverRequestRepository.updateEstimate({
-        estimateId: existing.id,
-        status: EstimateStatus.ACCEPTED,
-        requestReason: body.requestReason,
-        price: body.price ?? 0,
-        isRequest: true,
-      });
-    }
 
-    // PENDING 등은 승인으로 업데이트
+    // PENDING 
     return driverRequestRepository.updateEstimate({
       estimateId: existing.id,
       status: EstimateStatus.ACCEPTED,
@@ -248,6 +241,45 @@ async function createEstimateAndApprove(
     status: EstimateStatus.ACCEPTED,
     requestReason: body.requestReason,
     price: body.price ?? 0,
+    isRequest: true,
+  });
+}
+
+async function updateEstimateDecision(
+  userId: string,
+  body: DriverEstimateUpdateDto
+) {
+  const { driverId, serviceCategories, regions } = await ensureDriver(userId);
+  await ensureRequestAccessible(driverId, body.requestId, serviceCategories, regions);
+
+  const existing = await driverRequestRepository.findLatestEstimate(
+    driverId,
+    body.requestId
+  );
+
+  if (!existing) {
+    throw new ApiError(
+      HTTP_STATUS.NOT_FOUND,
+      HTTP_MESSAGE.NOT_FOUND,
+      HTTP_CODE.NOT_FOUND
+    );
+  }
+
+  let status: EstimateStatus;
+  let price: number;
+  if (body.status === "ACCEPTED") {
+    status = EstimateStatus.ACCEPTED;
+    price = body.price;
+  } else {
+    status = EstimateStatus.REJECTED;
+    price = ESTIMATE.REJECT_PRICE;
+  }
+
+  return driverRequestRepository.updateEstimate({
+    estimateId: existing.id,
+    status,
+    requestReason: body.requestReason,
+    price,
     isRequest: true,
   });
 }
@@ -273,7 +305,7 @@ async function createEstimateAndReject(
       );
     }
 
-    // PENDING 등은 반려로 업데이트
+    // PENDING ?��? 반려�??�데?�트
     return driverRequestRepository.updateEstimate({
       estimateId: existing.id,
       status: EstimateStatus.REJECTED,
@@ -330,12 +362,29 @@ async function getDriverRejectedEstimates(
   return { items, page, pageSize, totalItems, totalPages };
 }
 
+async function deleteDriverRequest(
+  userId: string,
+  body: DriverRequestDeleteDto
+) {
+  const { driverId, serviceCategories, regions } = await ensureDriver(userId);
+  const requestId = await ensureRequestAccessible(
+    driverId,
+    body.requestId,
+    serviceCategories,
+    regions
+  );
+
+  return driverRequestRepository.deleteRequestWithEstimates(requestId);
+}
+
 const driverRequestService = {
   getDriverRequestList,
   getDriverDesignatedRequestList,
   createEstimateAndApprove,
   createEstimateAndReject,
+  updateEstimateDecision,
   getDriverRejectedEstimates,
+  deleteDriverRequest,
 };
 
 export default driverRequestService;

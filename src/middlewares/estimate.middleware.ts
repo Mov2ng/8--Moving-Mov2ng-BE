@@ -3,6 +3,63 @@ import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../constants/http";
 import estimateRepository from "../modules/estimate/estimate.repository";
 
 import type { NextFunction, Request, Response } from "express";
+import moverRepository from "../modules/movers/mover.repository";
+
+// 유저가 한 번만 기사님 지정 견적 요청 가능하도록 하는 미들웨어
+export async function userOnlyOneDriverMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const userId = req.user?.id ?? "";
+    const driverId = req.params.id;
+
+    if (!driverId) {
+      return next(
+        new ApiError(
+          HTTP_STATUS.BAD_REQUEST,
+          HTTP_MESSAGE.BAD_REQUEST,
+          HTTP_CODE.BAD_REQUEST
+        )
+      );
+    }
+
+    const favoriteList = await moverRepository.getFavoriteDriversByUser(userId);
+
+    if (
+      favoriteList.some((favorite) => favorite.driver_id === Number(driverId))
+    ) {
+      return next(
+        new ApiError(
+          HTTP_STATUS.CONFLICT,
+          HTTP_MESSAGE.DRIVER_ALREADY_FAVORITE,
+          HTTP_CODE.DRIVER_ALREADY_FAVORITE
+        )
+      );
+    }
+
+    if (!userId) {
+      return next(
+        new ApiError(
+          HTTP_STATUS.AUTH_REQUIRED,
+          HTTP_MESSAGE.AUTH_REQUIRED,
+          HTTP_CODE.AUTH_REQUIRED
+        )
+      );
+    }
+
+    return next();
+  } catch (error) {
+    return next(
+      new ApiError(
+        HTTP_STATUS.INTERNAL_ERROR,
+        HTTP_MESSAGE.INTERNAL_ERROR,
+        HTTP_CODE.INTERNAL_ERROR
+      )
+    );
+  }
+}
 
 // 현재 활성화된 견적이 있는지 확인하는 미들웨어
 export async function activeEstimateMiddleware(

@@ -1,6 +1,5 @@
 import winston from "winston";
 import env from "../config/env"; // parsedEnv.data => env 명명
-import chalk from "chalk"; // 문자열 색상용
 
 /**
  * Winston 기반 로그 레벨 및 포맷 설정
@@ -11,24 +10,16 @@ const { combine, timestamp, printf, errors } = winston.format;
 
 // timestamp + stack(or message) + 주요 메타(path/method/statusCode)
 const stackWithMetaFormat = printf((info) => {
-  let { timestamp, stack, message, statusCode, path, method } = info;
-  if (statusCode !== undefined) statusCode = statusCode;
-  if (path !== undefined) path = path;
-  if (method !== undefined) method = method;
+  const { timestamp, stack, message, statusCode, path, method } = info;
 
-  const ts = chalk.yellow(timestamp);
-  const sc = chalk.red("statusCode:");
-  const p = chalk.red("path:");
-  const m = chalk.red("method:");
-
-  return `${ts} | ${sc} ${statusCode ?? "-"} | ${p} '${path ?? "-"}' | ${m} ${
-    method ?? "-"
-  } | ${stack || message}`;
+  return `${timestamp} | statusCode: ${statusCode ?? "-"} | path: '${
+    path ?? "-"
+  }' | method: ${method ?? "-"} | ${stack || message}`;
 });
 
 // 로거 인스턴스 생성
 const logger = winston.createLogger({
-  // 로그 레벨(production은 info, dev/test는 debug로 상세 로깅) 설정
+  // 로그 레벨(production은 info, local/development는 debug로 상세 로깅) 설정
   level: env.NODE_ENV === "production" ? "info" : "debug",
 
   // timestamp + stack + 주요 메타를 남기는 공통 포맷

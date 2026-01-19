@@ -18,6 +18,8 @@ function validate<T>(schema: z.ZodType<T> | ((req: Request) => z.ZodType<T>)) {
     // schema가 함수인 경우 요청 시점의 req 정보를 바탕으로 동적으로 검증 스키마 결정 가능
     const resolvedSchema = typeof schema === "function" ? schema(req) : schema;
 
+    console.log("body:", req.body);
+
     // safeParse 사용해 success/error로 분기
     const result = resolvedSchema.safeParse({
       body: req.body, // JSON body
@@ -35,6 +37,16 @@ function validate<T>(schema: z.ZodType<T> | ((req: Request) => z.ZodType<T>)) {
           reason: issue.message,
         })
       );
+
+      result.error.issues.forEach((issue) => {
+        console.error("[ZOD VALIDATION ERROR]", {
+          path: issue.path.join("."),   // body.movingDate
+          message: issue.message,
+          code: issue.code,
+          received: issue,
+        });
+      });
+
       return next(
         new ApiError(
           HTTP_STATUS.BAD_REQUEST,

@@ -11,6 +11,7 @@ export type DriverRequestListItem = {
   estimateStatus?: EstimateStatus;
   estimatePrice?: number;
   userId?: string;
+  userName?: string;
   requestCreatedAt: Date;
   requestUpdatedAt: Date;
 };

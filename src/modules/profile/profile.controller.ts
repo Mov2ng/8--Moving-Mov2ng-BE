@@ -4,7 +4,7 @@ import ApiResponse from "../../core/http/ApiResponse"; // API 응답 클래스
 import ApiError from "../../core/http/ApiError"; // API 에러 클래스
 import { asyncWrapper } from "../../utils/asyncWrapper"; // 비동기 핸들러 래퍼 함수
 import logger from "../../utils/logger"; // 로깅 유틸리티
-import { ProfileRequestDto } from "./user.dto"; // 현재 도메인의 DTO / 타입
+import { ProfileRequestDto, BasicInfoRequestDto, UserIntegrationRequestDto } from "./profile.dto"; // 현재 도메인의 DTO / 타입
 import profileService from "./profile.service"; // 현재 도메인의 서비스
 
 /**
@@ -73,8 +73,54 @@ const updateProfile = asyncWrapper(
   }
 );
 
+/**
+ * 사용자 기본정보 업데이트
+ * @param req 요청
+ * @param res 응답
+ * @returns 업데이트된 사용자 기본정보
+ */
+const updateBasicInfo = asyncWrapper(
+  async (req: Request<{}, {}, BasicInfoRequestDto>, res: Response) => {
+    const { id: userId } = req.user!; // 미들웨어로 인증돼 타입 단언 가능
+    const user = await profileService.updateBasicInfo(userId, req.body);
+    logger.info(
+      `[${new Date().toISOString()}] 기본정보 업데이트 성공: ${user.email}`
+    );
+    return ApiResponse.success(
+      res,
+      user,
+      "기본정보 업데이트 성공",
+      HTTP_STATUS.OK
+    );
+  }
+);
+
+/**
+ * 사용자 프로필 + 기본정보 업데이트
+ * @param req 요청
+ * @param res 응답
+ * @returns 업데이트된 사용자 프로필 + 기본정보
+ */
+const updateUserIntegration = asyncWrapper(
+  async (req: Request<{}, {}, UserIntegrationRequestDto>, res: Response) => {
+    const { id: userId } = req.user!; // 미들웨어로 인증돼 타입 단언 가능
+    const user = await profileService.updateUserIntegration(userId, req.body);
+    logger.info(
+      `[${new Date().toISOString()}] 프로필 + 기본정보 업데이트 성공: ${user.email}`
+    );
+    return ApiResponse.success(
+      res,
+      user,
+      "프로필 + 기본정보 업데이트 성공",
+      HTTP_STATUS.OK
+    );
+  }
+);
+
 export default {
   getProfile,
   createProfile,
   updateProfile,
+  updateBasicInfo,
+  updateUserIntegration,
 };

@@ -16,8 +16,8 @@ datasource db {
 model User {
   id             String           @id @default(uuid())
   email          String           @unique
-  password       String
-  phone_number   String
+  password       String? // OAuth 사용자는 null 가능
+  phone_number   String? // OAuth 사용자는 카카오에서 제공 안할 수 있음
   name           String
   profileImage   String?
   role           Role             @default(USER)
@@ -203,6 +203,7 @@ enum EstimateStatus {
   PENDING
   ACCEPTED
   REJECTED
+  COMPLETED
 }
 
 enum tableName {

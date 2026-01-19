@@ -11,7 +11,10 @@
     "migrate:deploy": "prisma migrate deploy",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:reset": "ts-node prisma/reset.ts",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "repository": {
     "type": "git",
