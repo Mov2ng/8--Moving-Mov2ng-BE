@@ -521,7 +521,7 @@
  *                       example: USER
  *                     provider:
  *                       type: string
- *                       enum: [LOCAL, KAKAO, GOOGLE, NAVER]
+ *                       enum: [LOCAL]
  *                       description: 로그인 공급자
  *                       example: LOCAL
  *                     profileImage:
