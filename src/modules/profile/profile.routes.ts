@@ -12,6 +12,7 @@ import {
   driverOnlyMiddleware,
   userOnlyMiddleware,
 } from "../../middlewares/role.middleware";
+import { passwordResetRateLimiter } from "../../middlewares/rateLimit.middleware";
 
 const profileRouter = express.Router();
 
@@ -34,6 +35,7 @@ profileRouter
   // 기본정보 업데이트 (기사님)
   .put(
     "/driver/basic",
+    passwordResetRateLimiter, // 비밀번호 변경 요청 횟수 제한 미들웨어
     authMiddleware,
     driverOnlyMiddleware,
     validate(driverBasicInfoUpdateSchema),
@@ -42,6 +44,7 @@ profileRouter
   // 프로필 + 기본정보 업데이트
   .put(
     "/user",
+    passwordResetRateLimiter, // 비밀번호 변경 요청 횟수 제한 미들웨어
     authMiddleware,
     userOnlyMiddleware,
     validate(userIntegrationUpdateSchema),
