@@ -7,7 +7,7 @@ import { HTTP_CODE, HTTP_MESSAGE, HTTP_STATUS } from "../../../constants/http";
 import { EstimateStatus } from "@prisma/client";
 
 import type { QuoteWithDriver } from "./request.user.repository";
-import type { QuoteDetailResponse } from "./request.user.dto";
+import type { QuoteDetailResponse, UserRequestResponse } from "./request.user.dto";
 
 const parseEstimateId = (raw: string | undefined) => {
   const id = Number(raw);
@@ -242,9 +242,48 @@ const getQuoteDetail = asyncWrapper(
   }
 );
 
+const getUserRequests = asyncWrapper(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new ApiError(
+      HTTP_STATUS.AUTH_REQUIRED,
+      HTTP_MESSAGE.AUTH_REQUIRED,
+      HTTP_CODE.AUTH_REQUIRED
+    );
+  }
+
+  const requests = await requestUserService.getUserRequests(userId);
+
+  const response: UserRequestResponse[] = requests.map((request) => ({
+    id: request.id,
+    moving_type: request.moving_type,
+    moving_data: request.moving_data,
+    origin: request.origin,
+    destination: request.destination,
+    createdAt: request.createdAt,
+    updatedAt: request.updatedAt,
+    estimateCount: request._count.estimates,
+    estimates: request.estimates.map((estimate) => ({
+      id: estimate.id,
+      status: estimate.status,
+      price: estimate.price,
+      createdAt: estimate.createdAt,
+    })),
+  }));
+
+  return ApiResponse.success(
+    res,
+    response,
+    "내가 요청한 견적 조회에 성공했습니다.",
+    HTTP_STATUS.OK
+  );
+});
+
 export default {
   getReceivedQuotes,
   getPendingQuoteDetail,
   acceptQuote,
   getQuoteDetail,
+  getUserRequests,
 };

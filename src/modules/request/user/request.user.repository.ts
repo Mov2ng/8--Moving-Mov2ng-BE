@@ -151,9 +151,43 @@ async function findQuoteDetail({ userId, estimateId }: FindQuoteDetailParams) {
   });
 }
 
+/**
+ * 사용자가 생성한 이사 요청(Request) 목록 조회
+ * 각 Request에 대한 견적 개수 및 상태 정보 포함
+ */
+async function findUserRequests(userId: string) {
+  return prisma.request.findMany({
+    where: {
+      user_id: userId,
+    },
+    include: {
+      _count: {
+        select: {
+          estimates: true,
+        },
+      },
+      estimates: {
+        select: {
+          id: true,
+          status: true,
+          price: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
 export default {
   findReceivedQuotes,
   findPendingQuoteDetail,
   acceptQuote,
   findQuoteDetail,
+  findUserRequests,
 };
