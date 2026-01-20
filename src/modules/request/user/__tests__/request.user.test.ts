@@ -14,7 +14,7 @@ const createMockUser = (id: string): Pick<
   role: "USER" as const,
   email: "test@example.com",
   name: "Test User",
-  phone_number: null,
+  phone_number: "01000000000",
   profileImage: null,
   createdAt: new Date(),
   updatedAt: new Date(),
