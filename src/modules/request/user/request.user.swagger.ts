@@ -2,7 +2,7 @@
  * @openapi
  * /request/user/requests:
  *   get:
- *     summary: 내가 요청한 견적 목록 조회
+ *     summary: 사용자가 요청한 견적 목록 조회
  *     description: 사용자가 생성한 이사 요청(Request) 목록과 각 요청에 대한 견적 정보를 조회합니다.
  *     tags:
  *       - User
@@ -10,7 +10,7 @@
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: 내가 요청한 견적 목록 조회 성공
+ *         description: 사용자가 요청한 견적 목록 조회 성공
  *         content:
  *           application/json:
  *             schema:
@@ -21,7 +21,7 @@
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: 내가 요청한 견적 조회에 성공했습니다.
+ *                   example: 사용자가 요청한 견적 조회에 성공했습니다.
  *                 data:
  *                   type: array
  *                   items:
