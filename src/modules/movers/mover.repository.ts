@@ -14,9 +14,6 @@ interface GetMoversParams {
   userId?: string;
 }
 
-// Raw Query 정렬 타입
-type RawQuerySortType = "rating" | "confirm";
-
 // Raw Query 결과 타입
 interface MoverRawResult {
   id: number;
@@ -25,6 +22,7 @@ interface MoverRawResult {
   driver_years: number | null;
   driver_intro: string | null;
   driver_content: string | null;
+  profile_image: string | null;
   createdAt: Date;
   rating_avg: number;
   review_count: bigint;
@@ -96,6 +94,7 @@ async function getMovers({
       // 유저의 서비스, 지역 정보
       user: {
         select: {
+          profileImage: true,
           service: {
             where: { isDelete: false },
             select: { category: true },
@@ -220,17 +219,19 @@ async function getMoversByRawQuery({
       d."driver_years",
       d."driver_intro",
       d."driver_content",
+      u."profileImage" as profile_image,
       d."createdAt",
       COALESCE(AVG(r.rating), 0) as rating_avg,
       COUNT(DISTINCT r.id) as review_count,
       COUNT(DISTINCT fd.id) as favorite_count,
       COUNT(DISTINCT CASE WHEN e.status = 'ACCEPTED' THEN e.id END) as confirm_count
     FROM "Driver" d
+    LEFT JOIN "User" u ON d."user_id" = u."id"
     LEFT JOIN "Review" r ON d.id = r.driver_id AND r."isDelete" = false
     LEFT JOIN "FavoriteDriver" fd ON d.id = fd.driver_id AND fd."isDelete" = false
     LEFT JOIN "estimate" e ON d.id = e.driver_id
     WHERE ${whereClause}
-    GROUP BY d.id
+    GROUP BY d.id, u."profileImage"
     ORDER BY ${orderByClause}
     LIMIT ${take}
   `;
@@ -282,6 +283,7 @@ async function getMoversByRawQuery({
     driverYears: driver.driver_years,
     driverIntro: driver.driver_intro,
     driverContent: driver.driver_content,
+    profileImage: driver.profile_image,
     createdAt: driver.createdAt,
     ratingAvg: Number(driver.rating_avg),
     reviewCount: Number(driver.review_count),
@@ -543,6 +545,7 @@ async function getFavoriteDriversByUser(userId: string) {
         include: {
           user: {
             select: {
+              profileImage: true,
               service: {
                 where: { isDelete: false },
                 select: { category: true },
