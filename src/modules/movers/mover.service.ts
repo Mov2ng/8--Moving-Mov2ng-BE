@@ -123,6 +123,7 @@ function formatPrismaDriver(
   return {
     id: driver.id,
     nickname: driver.nickname,
+    profileImage: driver.user.profileImage,
     driverYears: driver.driver_years,
     driverIntro: driver.driver_intro,
     driverContent: driver.driver_content,
@@ -150,6 +151,7 @@ function formatRawQueryDriver(
   return {
     id: driver.id,
     nickname: driver.nickname,
+    profileImage: driver.profileImage,
     driverYears: driver.driverYears,
     driverIntro: driver.driverIntro,
     driverContent: driver.driverContent,
@@ -313,6 +315,7 @@ async function getFavoriteDrivers(userId: string) {
         id: driver.id,
         nickname: driver.nickname,
         careerYears: driver.driver_years,
+        profileImage: driver.user.profileImage,
         rating: Math.round(averageRating * 10) / 10,
         ratingCount,
         confirmedCount: driver._count.estimates,
