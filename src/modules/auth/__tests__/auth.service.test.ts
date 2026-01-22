@@ -11,7 +11,7 @@ import * as jwtUtils from "../../../utils/jwt";
 jest.mock("../auth.repository");
 jest.mock("../../../core/security/password");
 jest.mock("../../../utils/jwt");
-
+ 
 describe("AuthService", () => {
   // 테스트 격리를 위한 mock 초기화
   beforeEach(() => {
