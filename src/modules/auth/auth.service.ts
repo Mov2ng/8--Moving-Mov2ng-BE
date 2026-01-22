@@ -8,7 +8,7 @@ import {
   verifyToken,
 } from "../../utils/jwt";
 import authRepository from "./auth.repository";
-import { Role } from "@prisma/client";
+import { Role, Prisma } from "@prisma/client";
 import env from "../../config/env";
 import { SERVER } from "../../constants/http";
 import { isLocalhostRequest } from "../../utils/origin.utils";
@@ -128,15 +128,28 @@ async function signup(
   // role을 Role enum 타입으로 변환 (타입 단언 없이)
   const roleEnum: Role = role === "USER" ? Role.USER : Role.DRIVER;
 
-  // 유저 중복 체크
-  const existingUser = await authRepository.findUserByEmailAndRole(
+  // 이메일+role 중복 체크
+  const existingUserByEmail = await authRepository.findUserByEmailAndRole(
     email,
     roleEnum
   );
-  if (existingUser) {
+  if (existingUserByEmail) {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
-      "이미 가입한 계정입니다.",
+      "이미 가입한 이메일입니다.",
+      HTTP_CODE.BAD_REQUEST
+    );
+  }
+
+  // 전화번호+role 중복 체크
+  const existingUserByPhone = await authRepository.findUserByPhoneNumAndRole(
+    phoneNum,
+    roleEnum
+  );
+  if (existingUserByPhone) {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      "이미 가입한 전화번호입니다.",
       HTTP_CODE.BAD_REQUEST
     );
   }
@@ -152,22 +165,60 @@ async function signup(
   }
 
   // DB에 사용자 정보 저장
-  const user = await authRepository.createUser(
-    name,
-    email,
-    phoneNum,
-    hashedPassword,
-    roleEnum
-  );
-
-  if (!user) {
-    throw new ApiError(
-      HTTP_STATUS.INTERNAL_ERROR,
-      "사용자 생성에 실패했습니다.",
-      HTTP_CODE.INTERNAL_ERROR
+  try {
+    const user = await authRepository.createUser(
+      name,
+      email,
+      phoneNum,
+      hashedPassword,
+      roleEnum
     );
+
+    if (!user) {
+      throw new ApiError(
+        HTTP_STATUS.INTERNAL_ERROR,
+        "사용자 생성에 실패했습니다.",
+        HTTP_CODE.INTERNAL_ERROR
+      );
+    }
+    return user;
+  } catch (error) {
+    // Race condition 상황: 중복 체크를 통과한 이후 DB 생성 시점에서 DB unique constraint 위반
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      // target: 위반된 unique 제약조건의 필드명 배열 
+      const target = error.meta?.target as string[] | undefined;
+      
+      // 이메일+role 조합이 중복된 경우
+      if (target?.includes("email")) {
+        throw new ApiError(
+          HTTP_STATUS.BAD_REQUEST,
+          "이미 가입한 이메일입니다.",
+          HTTP_CODE.BAD_REQUEST
+        );
+      }
+      
+      // 전화번호+role 조합이 중복된 경우
+      if (target?.includes("phone_number")) {
+        throw new ApiError(
+          HTTP_STATUS.BAD_REQUEST,
+          "이미 가입한 전화번호입니다.",
+          HTTP_CODE.BAD_REQUEST
+        );
+      }
+      
+      // 어떤 필드인지 알 수 없는 경우 (방어 코드)
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        "이미 가입한 정보입니다.",
+        HTTP_CODE.BAD_REQUEST
+      );
+    }
+    
+    throw error;
   }
-  return user;
 }
 
 async function login(

@@ -31,6 +31,8 @@ export const loginRateLimiter = rateLimit({
  * 비밀번호 재설정 요청 제한 미들웨어
  * - 1시간 동안 최대 3번의 비밀번호 재설정 요청 허용
  * - 이메일 스팸 및 계정 탈취 시도 방지
+ * - 비밀번호 변경 필드가 없는 요청은 rate limit 카운트에서 제외
+ * - currentPassword와 newPassword가 둘 다 있어야 비밀번호 변경 시도로 간주
  */
 export const passwordResetRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1시간
@@ -43,7 +45,29 @@ export const passwordResetRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
-  skipFailedRequests: false,
+  skipFailedRequests: true, // 실패한 요청(비밀번호 검증 실패 등)은 rate limit 카운트에서 제외
+  // 비밀번호 변경 필드가 없는 요청은 rate limit 카운트에서 제외
+  // currentPassword와 newPassword가 둘 다 있고, 둘 다 비어있지 않아야 비밀번호 변경 시도로 간주
+  skip: (req) => {
+    const body = req.body || {};
+    // currentPassword와 newPassword가 둘 다 있고, 둘 다 비어있지 않아야 비밀번호 변경 시도로 간주
+    // undefined, null, 빈 문자열(""), 공백만 있는 문자열 모두 제외
+    const currentPassword = body.currentPassword;
+    const newPassword = body.newPassword;
+    const hasCurrentPassword =
+      currentPassword !== undefined &&
+      currentPassword !== null &&
+      typeof currentPassword === "string" &&
+      currentPassword.trim() !== "";
+    const hasNewPassword =
+      newPassword !== undefined &&
+      newPassword !== null &&
+      typeof newPassword === "string" &&
+      newPassword.trim() !== "";
+    const isPasswordChangeAttempt = hasCurrentPassword && hasNewPassword;
+    // 비밀번호 변경 시도가 아니면 skip (rate limit 카운트 안 함)
+    return !isPasswordChangeAttempt;
+  },
   handler: (req, res) => {
     res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
       success: false,

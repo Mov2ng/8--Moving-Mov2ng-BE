@@ -68,6 +68,27 @@ async function findUserByEmailAndRole(
 }
 
 /**
+ * 사용자 전화번호로 사용자 정보 조회
+ * @param phoneNum 사용자 전화번호
+ * @param role 사용자 역할
+ * @param tx 트랜잭션 클라이언트
+ * @returns 사용자 정보
+ */
+async function findUserByPhoneNumAndRole(
+  phoneNum: string,
+  role: Role,
+  tx: TxClient = prisma
+) {
+  return tx.user.findFirst({
+    where: {
+      phone_number: phoneNum,
+      role,
+      isDelete: false,
+    },
+  });
+}
+
+/**
  * 사용자 정보 업데이트
  * @param id 사용자 ID
  * @param data 업데이트할 사용자 정보 (부분 업데이트 가능)
@@ -90,5 +111,6 @@ export default {
   createUser,
   findUserById,
   findUserByEmailAndRole,
+  findUserByPhoneNumAndRole,
   updateUser,
 };
