@@ -1,21 +1,38 @@
 import { Request } from "express";
 import env from "../config/env";
+import logger from "./logger";
 
 /**
  * origin 문자열이 localhost인지 확인하는 함수
  * @param origin 체크할 origin 문자열 (예: "http://localhost:3000", "http://127.0.0.1:3000")
- * @returns localhost인지 여부
+ * @returns localhost이고 포트가 3000인지 여부
  */
 export function isLocalhostOrigin(origin: string | undefined | null): boolean {
   if (!origin) return false;
 
-  // localhost 또는 127.0.0.1 체크 (포트 번호 포함/미포함 모두 지원)
-  return (
-    origin.includes("localhost") ||
-    origin.includes("127.0.0.1") ||
-    origin.startsWith("http://localhost") ||
-    origin.startsWith("http://127.0.0.1")
-  );
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+    const port = url.port || (url.protocol === "https:" ? "443" : "80");
+
+    // localhost 또는 127.0.0.1 체크
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    if (!isLocalhost) return false;
+
+    // 포트 번호가 3000인지 확인
+    return port === "3000";
+  } catch {
+    // URL 파싱 실패 시 기본 체크
+    const isLocalhost = 
+      origin.includes("localhost") ||
+      origin.includes("127.0.0.1");
+
+    if (!isLocalhost) return false;
+
+    // 포트 번호가 3000인지 확인
+    return origin.includes(":3000");
+  }
 }
 
 /**
@@ -46,13 +63,20 @@ export function checkCorsOrigin(
 
   // origin이 없을 때는 허용 (같은 origin 요청이거나 서버 간 요청)
   if (!origin) {
+    logger.debug("CORS: No origin header, allowing request");
     callback(null, true);
     return;
   }
 
   // 로컬 BE: localhost만 허용
   if (env.NODE_ENV === "local") {
-    callback(null, isLocalhostOrigin(origin));
+    const allowed = isLocalhostOrigin(origin);
+    if (allowed) {
+      logger.debug(`CORS: Allowed localhost origin: ${origin}`);
+    } else {
+      logger.warn(`CORS: Blocked origin in local environment: ${origin} (only localhost:3000 allowed)`);
+    }
+    callback(null, allowed);
     return;
   }
 
@@ -60,6 +84,7 @@ export function checkCorsOrigin(
   if (env.NODE_ENV === "development") {
     // localhost는 허용 (local FE가 dev deployed BE에 접근 가능)
     if (isLocalhostOrigin(origin)) {
+      logger.debug(`CORS: Allowed localhost origin: ${origin}`);
       callback(null, true);
       return;
     }
@@ -67,11 +92,18 @@ export function checkCorsOrigin(
     // CORS_ORIGIN에 설정된 도메인만 허용
     if (env.CORS_ORIGIN) {
       const allowedOrigins = env.CORS_ORIGIN.split(",").map((o) => o.trim());
-      callback(null, allowedOrigins.includes(origin));
+      const allowed = allowedOrigins.includes(origin);
+      if (allowed) {
+        logger.debug(`CORS: Allowed origin from CORS_ORIGIN: ${origin}`);
+      } else {
+        logger.warn(`CORS: Blocked origin in development: ${origin} (allowed: ${allowedOrigins.join(", ")})`);
+      }
+      callback(null, allowed);
       return;
     }
 
     // CORS_ORIGIN이 없으면 localhost 외의 origin은 차단
+    logger.warn(`CORS: Blocked origin in development (no CORS_ORIGIN set): ${origin}`);
     callback(null, false);
     return;
   }
@@ -81,15 +113,23 @@ export function checkCorsOrigin(
     // CORS_ORIGIN에 설정된 도메인만 허용
     if (env.CORS_ORIGIN) {
       const allowedOrigins = env.CORS_ORIGIN.split(",").map((o) => o.trim());
-      callback(null, allowedOrigins.includes(origin));
+      const allowed = allowedOrigins.includes(origin);
+      if (allowed) {
+        logger.debug(`CORS: Allowed origin from CORS_ORIGIN: ${origin}`);
+      } else {
+        logger.warn(`CORS: Blocked origin in production: ${origin} (allowed: ${allowedOrigins.join(", ")})`);
+      }
+      callback(null, allowed);
       return;
     }
 
     // CORS_ORIGIN이 없으면 모든 origin 차단
+    logger.warn(`CORS: Blocked origin in production (no CORS_ORIGIN set): ${origin}`);
     callback(null, false);
     return;
   }
 
   // 그 외의 경우 차단
+  logger.warn(`CORS: Blocked origin (unknown NODE_ENV: ${env.NODE_ENV}): ${origin}`);
   callback(null, false);
 }
