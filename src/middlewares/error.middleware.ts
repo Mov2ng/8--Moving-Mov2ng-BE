@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import { NextFunction, Request, Response } from "express";
 import ApiError, { ApiErrorResponse } from "../core/http/ApiError";
 import logger from "../utils/logger";
@@ -49,6 +50,9 @@ function errorMiddleware(
       method: req.method,
       stack: response.stack,
     });
+  } else {
+    // 예기치 않은 에러는 Sentry로 전송
+    Sentry.captureException(err);
   }
 
   return res
