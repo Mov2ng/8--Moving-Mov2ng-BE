@@ -35,9 +35,14 @@ async function getQuoteDetail(userId: string, estimateId: number) {
   return requestUserRepository.findQuoteDetail({ userId, estimateId });
 }
 
+async function getUserRequests(userId: string) {
+  return requestUserRepository.findUserRequests(userId);
+}
+
 export default {
   getReceivedQuotes,
   getPendingQuoteDetail,
   acceptQuote,
   getQuoteDetail,
+  getUserRequests,
 };

@@ -5,6 +5,14 @@ import requestUserController from "./request.user.controller";
 
 const requestUserRouter = express.Router();
 
+// 내가 요청한 견적 목록 조회
+requestUserRouter.get(
+  "/requests",
+  authMiddleware,
+  userOnlyMiddleware,
+  requestUserController.getUserRequests
+);
+
 // 받은 견적 목록 조회
 requestUserRouter.get(
   "/estimates",
