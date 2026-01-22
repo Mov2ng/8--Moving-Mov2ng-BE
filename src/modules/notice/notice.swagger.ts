@@ -202,6 +202,3 @@
  *       403:
  *         description: Forbidden
  */
-
-// 트리쉐이킹 방지: 빌드 시 이 파일이 포함되도록 export 추가
-export {};
