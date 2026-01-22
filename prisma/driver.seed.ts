@@ -44,7 +44,7 @@ async function upsertUser(params: {
   } catch {
     // 동일 email이 이미 다른 id로 존재하는 경우: 기존 계정 재사용 (id는 고정 불가)
     const existingByEmail = await prisma.user.findUnique({
-      where: { email: params.email },
+      where: { email_role: { email: params.email, role: params.role } },
     });
     if (!existingByEmail) throw new Error(`[driver.seed] user upsert failed: ${params.email}`);
 
