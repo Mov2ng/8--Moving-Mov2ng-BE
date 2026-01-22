@@ -1,4 +1,5 @@
 import swaggerJSDoc from "swagger-jsdoc";
+import path from "path";
 import env from "../config/env";
 
 /**
@@ -37,6 +38,34 @@ export const swaggerSpec = swaggerJSDoc({
   },
   apis:
     env.NODE_ENV === "production"
-      ? ["dist/modules/**/*.swagger.js"]
-      : ["src/modules/**/*.swagger.ts"],
+      ? [
+          // 프로덕션: dist/src/modules/**/*.swagger.js
+          path.join(process.cwd(), "dist/src/modules/**/*.swagger.js"),
+          // 혹시 다른 경로에 빌드된 경우를 대비한 fallback
+          path.join(process.cwd(), "dist/modules/**/*.swagger.js"),
+        ]
+      : [
+          // 개발: src/modules/**/*.swagger.ts
+          path.join(process.cwd(), "src/modules/**/*.swagger.ts"),
+        ],
 });
+
+/**
+ * 동적으로 Swagger spec을 생성하는 함수 (요청마다 서버 URL 업데이트)
+ * @param req Express Request 객체
+ * @returns 업데이트된 Swagger spec
+ */
+export function getSwaggerSpec(req: any) {
+  const protocol = req.protocol || "http";
+  const host = req.get("host") || `localhost:${env.PORT}`;
+  const baseUrl = `${protocol}://${host}`;
+
+  return {
+    ...swaggerSpec,
+    servers: [
+      {
+        url: baseUrl,
+      },
+    ],
+  };
+}
