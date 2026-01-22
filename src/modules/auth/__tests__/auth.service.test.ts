@@ -173,7 +173,66 @@ describe("AuthService", () => {
             mockUserData.password,
             mockUserData.role
           )
-        ).rejects.toThrow("이미 가입한 계정입니다.");
+        ).rejects.toThrow("이미 가입한 이메일입니다.");
+
+        const error = await authService
+          .signup(
+            mockUserData.name,
+            mockUserData.email,
+            mockUserData.phoneNum,
+            mockUserData.password,
+            mockUserData.role
+          )
+          .catch((e) => e);
+
+        expect(error.statusCode).toBe(HTTP_STATUS.BAD_REQUEST);
+        expect(error.code).toBe(HTTP_CODE.BAD_REQUEST);
+      });
+
+      it("이미 존재하는 전화번호와 역할이면 BAD_REQUEST 에러를 던져야 함", async () => {
+        // Given
+        const existingUser = {
+          id: "existing-user-id",
+          email: "different@example.com", // 다른 이메일
+          role: Role.USER,
+          name: "기존유저",
+          phone_number: mockUserData.phoneNum, // 같은 전화번호
+          password: "hashed",
+          provider: "LOCAL",
+          isDelete: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // 이메일 중복 체크는 통과 (null 반환)
+        (authRepository.findUserByEmailAndRole as jest.Mock).mockResolvedValue(
+          null
+        );
+        // 전화번호 중복 체크는 실패 (기존 유저 반환)
+        (authRepository.findUserByPhoneNumAndRole as jest.Mock).mockResolvedValue(
+          existingUser
+        );
+
+        // When & Then
+        await expect(
+          authService.signup(
+            mockUserData.name,
+            mockUserData.email,
+            mockUserData.phoneNum,
+            mockUserData.password,
+            mockUserData.role
+          )
+        ).rejects.toThrow(ApiError);
+
+        await expect(
+          authService.signup(
+            mockUserData.name,
+            mockUserData.email,
+            mockUserData.phoneNum,
+            mockUserData.password,
+            mockUserData.role
+          )
+        ).rejects.toThrow("이미 가입한 전화번호입니다.");
 
         const error = await authService
           .signup(
@@ -192,6 +251,9 @@ describe("AuthService", () => {
       it("비밀번호 해싱 실패 시 INTERNAL_ERROR를 던져야 함", async () => {
         // Given
         (authRepository.findUserByEmailAndRole as jest.Mock).mockResolvedValue(
+          null
+        );
+        (authRepository.findUserByPhoneNumAndRole as jest.Mock).mockResolvedValue(
           null
         );
         (passwordUtils.hashPassword as jest.Mock).mockResolvedValue(null);
@@ -227,6 +289,9 @@ describe("AuthService", () => {
         const mockHashedPassword = "hashed_password_123";
 
         (authRepository.findUserByEmailAndRole as jest.Mock).mockResolvedValue(
+          null
+        );
+        (authRepository.findUserByPhoneNumAndRole as jest.Mock).mockResolvedValue(
           null
         );
         (passwordUtils.hashPassword as jest.Mock).mockResolvedValue(

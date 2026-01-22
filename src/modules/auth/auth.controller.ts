@@ -63,10 +63,20 @@ const me = asyncWrapper(async (req: Request, res: Response) => {
       HTTP_CODE.AUTH_REQUIRED
     );
   }
+
+  // 프로필 등록 여부 체크 (profileImage가 있으면 프로필 등록됨)
+  const hasProfile = !!req.user.profileImage;
+
   // req.user에 이미 전체 user 정보가 있음 (password 제외)
+  // 프로필 등록 여부 추가
+  const userWithProfileStatus = {
+    ...req.user,
+    hasProfile, // 프로필 등록 여부 (boolean)
+  };
+
   return ApiResponse.success(
     res,
-    req.user,
+    userWithProfileStatus,
     "내 정보 조회 성공",
     HTTP_STATUS.OK
   );

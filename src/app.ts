@@ -1,4 +1,8 @@
-﻿import express from "express";
+// IMPORTANT: Sentry를 가장 먼저 초기화 (다른 모든 import보다 위에)
+import "./services/sentry";
+import * as Sentry from "@sentry/node";
+
+import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import "./services/discordBot";
@@ -10,7 +14,7 @@ import requestUserRouter from "./modules/request/user/request.user.routes";
 import reviewRouter from "./modules/review/review.routes";
 import env from "./config/env";
 import errorMiddleware from "./middlewares/error.middleware";
-import { swaggerSpec } from "./docs/swagger";
+import { getSwaggerSpec } from "./docs/swagger";
 import swaggerUi from "swagger-ui-express";
 import estimateRouter from "./modules/estimate/estimate.routes";
 import noticeRouter from "./modules/notice/notice.routes";
@@ -56,13 +60,36 @@ app.use("/history", historyRouter);
 app.use("/request/driver", driverRequestRouter);
 
 // Swagger UI 엔드포인트
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// 요청마다 동적으로 서버 URL을 설정하여 AWS 배포 환경에서도 올바른 URL 사용
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // 요청마다 동적으로 Swagger 설정 생성 (프로덕션 환경에서 Host 헤더 기반으로 서버 URL 설정)
+    const dynamicSwaggerSpec = getSwaggerSpec(req);
+    swaggerUi.setup(dynamicSwaggerSpec)(req, res, next);
+  }
+);
 
-// 공통 에러 핸들러
 // 상태 체크 엔드포인트
 app.get("/healthz", (_, res) => {
   res.status(200).send("OK");
 });
+
+// Sentry 테스트 엔드포인트
+app.get("/debug-sentry", (_, res) => {
+  // 로그 전송
+  Sentry.logger.info("User triggered test error", {
+    action: "test_error_endpoint",
+  });
+  // 메트릭 전송
+  Sentry.metrics.count("test_counter", 1);
+  // 에러 발생
+  throw new Error("My first Sentry error!");
+});
+
+// Sentry 에러 핸들러 (에러 미들웨어 전에)
+Sentry.setupExpressErrorHandler(app);
 
 // 공통 에러 핸들러 등록
 app.use(errorMiddleware);

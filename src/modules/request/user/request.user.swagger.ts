@@ -1,11 +1,42 @@
 /**
  * @openapi
+ * /request/user/requests:
+ *   get:
+ *     summary: 사용자가 요청한 견적 목록 조회
+ *     description: 사용자가 생성한 이사 요청(Request) 목록과 각 요청에 대한 견적 정보를 조회합니다.
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 사용자가 요청한 견적 목록 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: 사용자가 요청한 견적 조회에 성공했습니다.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/UserRequest'
+ *       401:
+ *         description: 인증 필요
+ *       403:
+ *         description: 권한 없음 (일반 유저만 접근 가능)
+ *
  * /request/user/estimates:
  *   get:
  *     summary: 받은 견적 목록 조회
  *     description: 사용자가 받은 견적 목록을 조회합니다. 상태, 요청 ID, 이사일 필터링이 가능합니다.
  *     tags:
- *       - User Request
+ *       - User
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -57,7 +88,7 @@
  *     summary: 견적 상세 조회 (상태 무관)
  *     description: 특정 견적의 상세 정보를 조회합니다. 상태와 관계없이 조회 가능합니다.
  *     tags:
- *       - User Request
+ *       - User
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -98,7 +129,7 @@
  *     summary: 대기중인 견적 상세 조회
  *     description: ACCEPTED 상태인 견적의 상세 정보를 조회합니다.
  *     tags:
- *       - User Request
+ *       - User
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -139,7 +170,7 @@
  *     summary: 견적 확정
  *     description: ACCEPTED 상태인 견적을 COMPLETED 상태로 변경합니다.
  *     tags:
- *       - User Request
+ *       - User
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -262,4 +293,71 @@
  *               type: boolean
  *               description: 즐겨찾기 여부
  *               example: true
+ *
+ *     UserRequest:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *           description: 이사 요청 ID
+ *           example: 1
+ *         moving_type:
+ *           type: string
+ *           enum: [SMALL, HOME, OFFICE]
+ *           description: 이사 유형
+ *           example: SMALL
+ *         moving_data:
+ *           type: string
+ *           format: date-time
+ *           description: 이사 예정일
+ *           example: "2024-12-20T10:00:00.000Z"
+ *         origin:
+ *           type: string
+ *           description: 출발지
+ *           example: 서울시 강남구
+ *         destination:
+ *           type: string
+ *           description: 도착지
+ *           example: 서울시 서초구
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: 요청 생성일
+ *           example: "2024-01-05T00:48:15.841Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: 요청 수정일
+ *           example: "2024-01-05T00:48:15.841Z"
+ *         estimateCount:
+ *           type: integer
+ *           description: 견적 개수
+ *           example: 3
+ *         estimates:
+ *           type: array
+ *           description: 견적 목록
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *                 description: 견적 ID
+ *                 example: 1
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, ACCEPTED, REJECTED, COMPLETED]
+ *                 description: 견적 상태
+ *                 example: ACCEPTED
+ *               price:
+ *                 type: integer
+ *                 description: 견적 가격
+ *                 example: 180000
+ *               createdAt:
+ *                 type: string
+ *                 format: date-time
+ *                 description: 견적 생성일
+ *                 example: "2024-01-06T00:48:15.841Z"
  */
+
+// 트리쉐이킹 방지: 빌드 시 이 파일이 포함되도록 export 추가
+export {};
