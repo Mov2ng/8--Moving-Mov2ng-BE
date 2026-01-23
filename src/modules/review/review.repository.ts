@@ -29,7 +29,7 @@ async function hasAcceptedEstimatePast(userId: string, driverId: number) {
   const now = new Date();
   return prisma.estimate.findFirst({
     where: {
-      status: EstimateStatus.ACCEPTED,
+      status: EstimateStatus.COMPLETED,
       driver_id: driverId,
       request: { user_id: userId, moving_data: { lt: now } },
     },
@@ -97,7 +97,7 @@ async function findWritableReviews({ userId }: FindWritableReviewsParams) {
 
   return prisma.estimate.findMany({
     where: {
-      status: EstimateStatus.ACCEPTED,
+      status: EstimateStatus.COMPLETED,
       request: {
         user_id: userId,
         moving_data: { lt: now },
