@@ -64,7 +64,7 @@ async function findReviews({
           },
           estimates: {
             where: {
-              status: EstimateStatus.ACCEPTED,
+              status: EstimateStatus.COMPLETED,
               request:
                 userId !== undefined
                   ? { user_id: userId }
