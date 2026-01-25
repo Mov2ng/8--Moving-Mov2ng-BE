@@ -42,7 +42,7 @@ jobs:
       # ✅ 성공 알림
       - name: Discord Success Notification
         if: success()
-        uses: appleboy/discord-action@v0.3.2
+        uses: appleboy/discord-action@v1.0.0
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
           message: |
@@ -55,7 +55,7 @@ jobs:
       # ❌ 실패 알림
       - name: Discord Failure Notification
         if: failure()
-        uses: appleboy/discord-action@v0.3.2
+        uses: appleboy/discord-action@v1.0.0
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
           message: |
