@@ -2,8 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
 
 jobs:
   deploy:
@@ -11,91 +10,57 @@ jobs:
 
     steps:
       # 1. 코드 체크아웃
-      - name: Checkout
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      # 2. Node 설정
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # 3. 의존성 설치
-      - name: Install dependencies
-        run: npm ci
-
-      # 4. Prisma generate
-      - name: Prisma generate
-        run: npx prisma generate
-
-      # 5. Build
-      - name: Build
-        run: npm run build
-
-      # 6. 배포 패키지 생성
-      - name: Archive build
-        run: |
-          mkdir deploy
-          cp -r dist prisma package.json ecosystem.config.js deploy/
-          tar -czf deploy.tar.gz deploy
-
-      # 7. EC2로 파일 전송
-      - name: Upload to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: deploy.tar.gz
-          target: /home/ec2-user/8--Moving-Mov2ng-BE
-
-      # 8. EC2 배포 실행
-      - name: Deploy on EC2
+      # 2. EC2 배포
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            APP_DIR=/home/ec2-user/8--Moving-Mov2ng-BE
-            RELEASE_DIR=$APP_DIR/releases/$(date +%Y%m%d-%H%M%S)
+            cd /home/ec2-user/8--Moving-Mov2ng-BE
 
-            mkdir -p $RELEASE_DIR
-            tar -xzf $APP_DIR/deploy.tar.gz -C $RELEASE_DIR
-            rm $APP_DIR/deploy.tar.gz
+            echo "📦 Pull latest code"
+            git pull origin main
 
-            ln -sfn $RELEASE_DIR $APP_DIR/current
+            echo "📦 Install dependencies"
+            npm install
 
-            cd $APP_DIR/current/deploy
-            npm install --production
+            echo "🧬 Prisma generate"
+            npx prisma generate
 
-            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+            echo "🏗 Build"
+            npm run build
 
-      # 9. ✅ 성공 알림
-      - name: Discord Notify (Success)
+            echo "♻️ Restart PM2"
+            pm2 reload all --update-env
+
+      # ✅ 성공 알림
+      - name: Discord Success Notification
         if: success()
-        uses: Ilshidur/action-discord@0.3.2
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        uses: appleboy/discord-action@v0.3.2
         with:
-          args: |
-            🚀 **배포 성공**
-            📦 Repository: ${{ github.repository }}
-            🌿 Branch: ${{ github.ref_name }}
-            🔖 Commit: `${{ github.sha }}`
-            👤 By: ${{ github.actor }}
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
+          message: |
+            ✅ **Deploy Success**
+            - Repository: `${{ github.repository }}`
+            - Branch: `${{ github.ref_name }}`
+            - Commit: `${{ github.sha }}`
+            - Actor: `${{ github.actor }}`
 
-      # 10. ❌ 실패 알림
-      - name: Discord Notify (Failure)
+      # ❌ 실패 알림
+      - name: Discord Failure Notification
         if: failure()
-        uses: Ilshidur/action-discord@0.3.2
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        uses: appleboy/discord-action@v0.3.2
         with:
-          args: |
-            ❌ **배포 실패**
-            📦 Repository: ${{ github.repository }}
-            🌿 Branch: ${{ github.ref_name }}
-            👤 By: ${{ github.actor }}
-            🧨 Check GitHub Actions logs
+          webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
+          message: |
+            ❌ **Deploy Failed**
+            - Repository: `${{ github.repository }}`
+            - Branch: `${{ github.ref_name }}`
+            - Actor: `${{ github.actor }}`
+            - Workflow: `${{ github.workflow }}`
