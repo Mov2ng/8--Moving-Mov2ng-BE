@@ -75,7 +75,7 @@ jobs:
       # 9. ✅ 성공 알림
       - name: Discord Notify (Success)
         if: success()
-        uses: Ilshidur/action-discord@v2
+        uses: Ilshidur/action-discord@0.3.2
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
@@ -89,7 +89,7 @@ jobs:
       # 10. ❌ 실패 알림
       - name: Discord Notify (Failure)
         if: failure()
-        uses: Ilshidur/action-discord@v2
+        uses: Ilshidur/action-discord@0.3.2
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
