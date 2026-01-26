@@ -2,7 +2,8 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -10,57 +11,110 @@ jobs:
 
     steps:
       # 1. 코드 체크아웃
-      - name: Checkout source code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. EC2 배포
-      - name: Deploy to EC2
+      # 2. Node 설정
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Prisma generate
+      - name: Prisma generate
+        run: npx prisma generate
+
+      # 5. Build
+      - name: Build
+        run: npm run build
+
+      # 6. 배포 패키지 생성
+      - name: Archive build
+        run: |
+          mkdir deploy
+          cp -r dist prisma package.json package-lock.json ecosystem.config.js deploy/
+          tar -czf deploy.tar.gz deploy
+
+      # 7. EC2로 파일 전송
+      - name: Upload to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: deploy.tar.gz
+          target: /home/ec2-user/8--Moving-Mov2ng-BE
+
+      # 8. EC2 배포 실행
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /home/ec2-user/8--Moving-Mov2ng-BE
+            APP_DIR=/home/ec2-user/8--Moving-Mov2ng-BE
+            RELEASE_DIR=$APP_DIR/releases/$(date +%Y%m%d-%H%M%S)
 
-            echo "📦 Pull latest code"
-            git pull origin main
+            # 압축 해제
+            mkdir -p $RELEASE_DIR
+            tar -xzf $APP_DIR/deploy.tar.gz -C $RELEASE_DIR
+            rm $APP_DIR/deploy.tar.gz
 
-            echo "📦 Install dependencies"
-            npm install
+            # 현재 릴리스로 심볼릭 링크 업데이트
+            ln -sfn $RELEASE_DIR/deploy $APP_DIR/current
 
-            echo "🧬 Prisma generate"
+            cd $APP_DIR/current
+
+            # .env 파일 심볼릭 링크 (APP_DIR/.env 파일 필요)
+            ln -sf $APP_DIR/.env .env
+
+            # 의존성 설치 (prisma CLI 필요하므로 전체 설치 후 정리)
+            npm ci
+            
+            # Prisma client 생성 및 마이그레이션
             npx prisma generate
+            npx prisma migrate deploy
+            
+            # devDependencies 제거
+            npm prune --production
 
-            echo "🏗 Build"
-            npm run build
+            # PM2 재시작
+            pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
 
-            echo "♻️ Restart PM2"
-            pm2 reload all --update-env
+            # 오래된 릴리스 정리 (최근 5개만 유지)
+            cd $APP_DIR/releases && ls -t | tail -n +6 | xargs -r rm -rf
 
-      # ✅ 성공 알림
-      - name: Discord Success Notification
+      # 9. ✅ 성공 알림
+      - name: Discord Notify (Success)
         if: success()
-        uses: appleboy/discord-action@v1.0.0
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
-            ✅ **Deploy Success**
-            - Repository: `${{ github.repository }}`
-            - Branch: `${{ github.ref_name }}`
-            - Commit: `${{ github.sha }}`
-            - Actor: `${{ github.actor }}`
+          args: |
+            🚀 **배포 성공**
+            📦 Repository: ${{ github.repository }}
+            🌿 Branch: ${{ github.ref_name }}
+            🔖 Commit: `${{ github.sha }}`
+            👤 By: ${{ github.actor }}
 
-      # ❌ 실패 알림
-      - name: Discord Failure Notification
+      # 10. ❌ 실패 알림
+      - name: Discord Notify (Failure)
         if: failure()
-        uses: appleboy/discord-action@v1.0.0
+        uses: Ilshidur/action-discord@0.3.2
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
-            ❌ **Deploy Failed**
-            - Repository: `${{ github.repository }}`
-            - Branch: `${{ github.ref_name }}`
-            - Actor: `${{ github.actor }}`
-            - Workflow: `${{ github.workflow }}`
+          args: |
+            ❌ **배포 실패**
+            📦 Repository: ${{ github.repository }}
+            🌿 Branch: ${{ github.ref_name }}
+            👤 By: ${{ github.actor }}
+            🧨 Check GitHub Actions logs
